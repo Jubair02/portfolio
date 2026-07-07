@@ -1,0 +1,296 @@
+@import "tailwindcss";
+
+/* =============================================================================
+ * DESIGN SYSTEM — Tailwind v4 (CSS-first config)
+ * ===========================================================================*/
+
+/* Class-based dark mode (toggled by next-themes on <html class="dark">) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ----------------------------------------------------------------------------
+ * Theme tokens (switchable). Utilities like bg-background / text-foreground /
+ * border-border resolve to these via @theme inline below.
+ * --------------------------------------------------------------------------*/
+:root {
+  --background: #ffffff;
+  --background-2: #f6f7f9;
+  --foreground: #0a0a0f;
+  --card: #ffffff;
+  --card-foreground: #0a0a0f;
+  --muted: #f2f3f5;
+  --muted-foreground: #565d6b;
+  --border: #e6e7ec;
+  --input: #e6e7ec;
+  --ring: #6d5efc;
+
+  --primary: #6d5efc;
+  --primary-foreground: #ffffff;
+  --accent: #0891b2;
+  --accent-2: #c026d3;
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(10, 12, 20, 0.08);
+  --grid-line: rgba(10, 12, 20, 0.045);
+  --shadow-color: 220 40% 20%;
+}
+
+.dark {
+  --background: #07070b;
+  --background-2: #0b0b11;
+  --foreground: #f3f3f6;
+  --card: #101017;
+  --card-foreground: #f3f3f6;
+  --muted: #15151d;
+  --muted-foreground: #9d9dad;
+  --border: #20202b;
+  --input: #20202b;
+  --ring: #8b7dff;
+
+  --primary: #8b7dff;
+  --primary-foreground: #0a0a0f;
+  --accent: #22d3ee;
+  --accent-2: #e879f9;
+
+  --glass-bg: rgba(17, 17, 24, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --grid-line: rgba(255, 255, 255, 0.04);
+  --shadow-color: 240 60% 2%;
+}
+
+/* Bind tokens to Tailwind color/font utilities */
+@theme inline {
+  --color-background: var(--background);
+  --color-background-2: var(--background-2);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+}
+
+/* ----------------------------------------------------------------------------
+ * Base
+ * --------------------------------------------------------------------------*/
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+
+  body {
+    position: relative;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 32%, transparent);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
+    border-radius: 99px;
+    border: 3px solid var(--background);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--primary) 60%, transparent);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ * Reusable component / utility classes
+ * --------------------------------------------------------------------------*/
+@layer utilities {
+  /* Layout container */
+  .container-page {
+    width: 100%;
+    max-width: 80rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 640px) {
+    .container-page { padding-inline: 2rem; }
+  }
+  @media (min-width: 1024px) {
+    .container-page { padding-inline: 2.5rem; }
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background-image: linear-gradient(
+      110deg,
+      var(--foreground) 0%,
+      color-mix(in oklab, var(--foreground) 55%, var(--muted-foreground)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      110deg,
+      var(--primary) 0%,
+      var(--accent-2) 45%,
+      var(--accent) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: hueShift 8s ease-in-out infinite alternate;
+  }
+
+  /* Glassmorphism */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid var(--glass-border);
+  }
+  .glass-strong {
+    background: color-mix(in oklab, var(--card) 82%, transparent);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid var(--glass-border);
+  }
+
+  /* Surface card */
+  .surface {
+    background: color-mix(in oklab, var(--card) 92%, transparent);
+    border: 1px solid var(--border);
+  }
+
+  /* Subtle grid backdrop */
+  .grid-pattern {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .dot-pattern {
+    background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  /* Fade mask edges (for marquees) */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  /* Premium soft shadow */
+  .shadow-glow {
+    box-shadow:
+      0 1px 2px hsl(var(--shadow-color) / 0.08),
+      0 8px 30px hsl(var(--shadow-color) / 0.12);
+  }
+  .shadow-glow-lg {
+    box-shadow:
+      0 2px 4px hsl(var(--shadow-color) / 0.06),
+      0 24px 60px -12px hsl(var(--shadow-color) / 0.28);
+  }
+
+  /* Card hover sheen */
+  .card-hover {
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.4s ease, border-color 0.4s ease;
+  }
+
+  /* Animation helpers */
+  .animate-float { animation: float 7s ease-in-out infinite; }
+  .animate-float-slow { animation: float 11s ease-in-out infinite; }
+  .animate-marquee { animation: marquee 38s linear infinite; }
+  .animate-spin-slow { animation: spin 22s linear infinite; }
+  .animate-blink { animation: blink 1.15s steps(2, start) infinite; }
+  .pause-hover:hover { animation-play-state: paused; }
+}
+
+/* ----------------------------------------------------------------------------
+ * Keyframes
+ * --------------------------------------------------------------------------*/
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-22px) translateX(10px); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes hueShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  70% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* ----------------------------------------------------------------------------
+ * Reduced motion — respect user preference
+ * --------------------------------------------------------------------------*/
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
