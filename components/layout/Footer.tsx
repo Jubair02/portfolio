@@ -109,14 +109,14 @@ export function Footer() {
           <p>
             © {year} {site.name}. All rights reserved.
           </p>
-          <p className="inline-flex items-center gap-1.5">
+          {/* <p className="inline-flex items-center gap-1.5">
             Built with
             <span className="font-medium text-foreground">Next.js</span>
             <span aria-hidden="true">·</span>
             <span className="font-medium text-foreground">Tailwind</span>
             <span aria-hidden="true">·</span>
             <span className="font-medium text-foreground">Framer Motion</span>
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>
