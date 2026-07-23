@@ -1,7 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { skillCategories, techMarquee } from "@/content/site";
+import { techMarquee } from "@/content/site";
+import type { SkillCategoryData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
@@ -29,7 +30,7 @@ function SkillBar({ name, level }: { name: string; level: number }) {
   );
 }
 
-export function Skills() {
+export function Skills({ categories }: { categories: SkillCategoryData[] }) {
   return (
     <Section id="skills" className="border-t border-[color:var(--border)]">
       <SectionHeading
@@ -39,11 +40,14 @@ export function Skills() {
       />
 
       <div className="mt-14 grid gap-6 lg:grid-cols-3">
-        {skillCategories.map((cat, i) => (
+        {categories.map((cat, i) => (
           <Reveal key={cat.title} delay={0.08 * i}>
-            <div className="card-hover surface group h-full rounded-3xl p-7 hover:border-[color:var(--primary)]/40 hover:shadow-glow">
+            <div className="card-hover surface border-animated group relative h-full rounded-3xl p-7 hover:border-[color:var(--primary)]/40 hover:shadow-glow">
               <div className="flex items-center gap-3">
-                <span className="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent-2/10 text-primary">
+                <span
+                  className="grid size-11 animate-float-slow place-items-center rounded-2xl bg-gradient-to-br from-primary/15 to-accent-2/10 text-primary shadow-[0_0_0_0_transparent] transition-shadow duration-500 group-hover:shadow-[0_8px_24px_-6px_color-mix(in_oklab,var(--primary)_60%,transparent)]"
+                  style={{ animationDelay: `${i * 0.7}s` }}
+                >
                   <DataIcon name={cat.icon} className="size-5" />
                 </span>
                 <div>

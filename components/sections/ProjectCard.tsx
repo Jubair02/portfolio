@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, ChevronDown } from "lucide-react";
 import type { Project } from "@/content/site";
@@ -13,19 +14,40 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
 
   return (
     <TiltCard max={5} className="group h-full rounded-3xl">
-      <article className="surface relative flex h-full flex-col overflow-hidden rounded-3xl transition-[border-color,box-shadow] duration-400 group-hover:border-[color:var(--primary)]/40 group-hover:shadow-glow-lg">
+      <article className="surface border-animated relative flex h-full flex-col overflow-hidden rounded-3xl transition-[border-color,box-shadow,transform] duration-400 group-hover:-translate-y-1 group-hover:border-[color:var(--primary)]/40 group-hover:shadow-glow-lg">
         {/* Cover */}
-        <div
-          className={cn(
-            "relative h-44 overflow-hidden bg-gradient-to-br",
-            project.gradient
+        <div className="relative h-44 overflow-hidden">
+          {project.image ? (
+            <>
+              {/* Real screenshot, zooming on hover */}
+              <Image
+                src={project.image}
+                alt={`${project.title} — ${project.tagline}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-110"
+              />
+              {/* Darken toward the bottom so the title stays legible */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
+            </>
+          ) : (
+            <>
+              {/* Zooming gradient (image-zoom feel) */}
+              <div
+                className={cn(
+                  "absolute inset-0 bg-gradient-to-br transition-transform duration-700 ease-out group-hover:scale-110",
+                  project.gradient
+                )}
+              />
+              <div className="dot-pattern absolute inset-0 opacity-20 mix-blend-overlay" />
+              {/* Glow sheen on hover */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-white/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <DataIcon
+                name={project.icon}
+                className="absolute -bottom-6 -right-4 size-40 text-white/15 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6"
+              />
+            </>
           )}
-        >
-          <div className="dot-pattern absolute inset-0 opacity-20 mix-blend-overlay" />
-          <DataIcon
-            name={project.icon}
-            className="absolute -bottom-6 -right-4 size-40 text-white/15 transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-6"
-          />
           <div className="relative flex items-center justify-between p-5">
             <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white">
               {project.tagline}

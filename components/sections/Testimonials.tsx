@@ -1,18 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
-import { testimonials } from "@/content/site";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Pause, Play, Quote } from "lucide-react";
+import type { TestimonialData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { cn } from "@/lib/utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-export function Testimonials() {
+export function Testimonials({ testimonials }: { testimonials: TestimonialData[] }) {
+  const reduce = useReducedMotion();
   const [[index, dir], setState] = useState<[number, number]>([0, 0]);
-  const [paused, setPaused] = useState(false);
+  const [hoverPaused, setHoverPaused] = useState(false);
+  const [manualPaused, setManualPaused] = useState(false);
   const count = testimonials.length;
+
+  // Auto-rotation stops under reduced-motion, on hover/focus, or when the
+  // visitor explicitly pauses it (WCAG 2.2.2 Pause/Stop/Hide).
+  const playing = !reduce && !manualPaused && !hoverPaused && count > 1;
 
   const go = useCallback(
     (next: number, direction: number) => {
@@ -22,11 +28,12 @@ export function Testimonials() {
   );
 
   useEffect(() => {
-    if (paused) return;
+    if (!playing) return;
     const id = setInterval(() => go(index + 1, 1), 6500);
     return () => clearInterval(id);
-  }, [index, paused, go]);
+  }, [index, playing, go]);
 
+  if (count === 0) return null;
   const active = testimonials[index];
 
   return (
@@ -40,10 +47,10 @@ export function Testimonials() {
 
       <div
         className="relative mx-auto mt-14 max-w-3xl"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
+        onMouseEnter={() => setHoverPaused(true)}
+        onMouseLeave={() => setHoverPaused(false)}
+        onFocusCapture={() => setHoverPaused(true)}
+        onBlurCapture={() => setHoverPaused(false)}
       >
         <div className="glass-strong shadow-glow relative overflow-hidden rounded-4xl p-8 sm:p-12">
           <Quote className="absolute right-8 top-8 size-16 text-primary/10" />
@@ -56,19 +63,18 @@ export function Testimonials() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: dir >= 0 ? -40 : 40 }}
                 transition={{ duration: 0.45, ease }}
-                aria-live="polite"
               >
                 <p className="text-lg font-medium leading-relaxed text-foreground/90 sm:text-xl">
-                  “{active.quote}”
+                  “{active.review}”
                 </p>
                 <footer className="mt-7 flex items-center gap-4">
                   <span className="grid size-12 place-items-center rounded-full bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground">
-                    {active.initials}
+                    {active.initials || active.name.charAt(0)}
                   </span>
                   <div>
                     <div className="font-semibold">{active.name}</div>
                     <div className="text-sm text-muted-foreground">
-                      {active.title} · {active.company}
+                      {[active.designation, active.company].filter(Boolean).join(" · ")}
                     </div>
                   </div>
                 </footer>
@@ -114,6 +120,26 @@ export function Testimonials() {
           >
             <ChevronRight className="size-5" />
           </button>
+
+          {!reduce && count > 1 && (
+            <button
+              type="button"
+              aria-label={
+                manualPaused
+                  ? "Play testimonials automatically"
+                  : "Pause automatic rotation"
+              }
+              aria-pressed={manualPaused}
+              onClick={() => setManualPaused((v) => !v)}
+              className="ml-1 grid size-10 place-items-center rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/40 text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
+            >
+              {manualPaused ? (
+                <Play className="size-4" />
+              ) : (
+                <Pause className="size-4" />
+              )}
+            </button>
+          )}
         </div>
       </div>
     </Section>

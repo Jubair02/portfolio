@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/activity";
 
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -18,6 +20,17 @@ export async function POST(req: Request) {
         { ok: false, error: "Invalid input." },
         { status: 400 }
       );
+    }
+
+    // Persist every submission so it appears in the admin Contact Messages
+    // inbox. Best-effort: never fail the request if the DB is unavailable.
+    try {
+      await prisma.contactMessage.create({
+        data: { name, email, message },
+      });
+      await logActivity("received", "message", `from ${name}`);
+    } catch (dbErr) {
+      console.warn("[contact] could not persist message:", dbErr);
     }
 
     const apiKey = process.env.RESEND_API_KEY;

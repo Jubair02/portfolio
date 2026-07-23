@@ -1,8 +1,27 @@
 import { nav, site } from "@/content/site";
+import type { SocialLinkData } from "@/lib/data";
 import { GithubIcon, LinkedinIcon } from "@/components/icons";
-import { Mail } from "lucide-react";
+import { Mail, Phone, Globe } from "lucide-react";
 
-export function Footer() {
+function PlatformIcon({ platform }: { platform: string }) {
+  const p = platform.toLowerCase();
+  const cls = "size-[1.1rem]";
+  if (p.includes("github")) return <GithubIcon className={cls} />;
+  if (p.includes("linkedin")) return <LinkedinIcon className={cls} />;
+  if (p.includes("email") || p.includes("mail")) return <Mail className={cls} />;
+  if (p.includes("phone") || p.includes("tel")) return <Phone className={cls} />;
+  return <Globe className={cls} />;
+}
+
+export function Footer({
+  socials,
+  footerText,
+  copyright,
+}: {
+  socials: SocialLinkData[];
+  footerText?: string | null;
+  copyright?: string | null;
+}) {
   const year = new Date().getFullYear();
 
   return (
@@ -20,35 +39,22 @@ export function Footer() {
               </span>
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              {site.role} building fast, elegant products for the web. Open to
-              freelance work and full-time roles.
+              {footerText ??
+                `${site.role} building fast, elegant products for the web. Open to freelance work and full-time roles.`}
             </p>
-            <div className="mt-5 flex items-center gap-2">
-              <a
-                href={site.socials.github}
-                target="_blank"
-                rel="noreferrer noopener"
-                aria-label="GitHub"
-                className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
-              >
-                <GithubIcon className="size-[1.1rem]" />
-              </a>
-              <a
-                href={site.socials.linkedin}
-                target="_blank"
-                rel="noreferrer noopener"
-                aria-label="LinkedIn"
-                className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
-              >
-                <LinkedinIcon className="size-[1.1rem]" />
-              </a>
-              <a
-                href={site.socials.email}
-                aria-label="Email"
-                className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
-              >
-                <Mail className="size-[1.1rem]" />
-              </a>
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {socials.map((s) => (
+                <a
+                  key={s.platform}
+                  href={s.url}
+                  target={s.url.startsWith("http") ? "_blank" : undefined}
+                  rel="noreferrer noopener"
+                  aria-label={s.platform}
+                  className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
+                >
+                  <PlatformIcon platform={s.platform} />
+                </a>
+              ))}
             </div>
           </div>
 
@@ -106,9 +112,7 @@ export function Footer() {
         </div>
 
         <div className="flex flex-col items-center justify-between gap-4 border-t border-[color:var(--border)] py-7 text-sm text-muted-foreground sm:flex-row">
-          <p>
-            © {year} {site.name}. All rights reserved.
-          </p>
+          <p>{copyright ?? `© ${year} ${site.name}. All rights reserved.`}</p>
           {/* <p className="inline-flex items-center gap-1.5">
             Built with
             <span className="font-medium text-foreground">Next.js</span>

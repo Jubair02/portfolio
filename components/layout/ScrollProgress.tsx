@@ -3,8 +3,10 @@
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
+import { smoothScrollTo, useLenis } from "@/components/providers/SmoothScroll";
 
 export function ScrollProgress() {
+  const lenis = useLenis();
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 120,
@@ -32,7 +34,7 @@ export function ScrollProgress() {
           <motion.button
             type="button"
             aria-label="Back to top"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => smoothScrollTo(lenis, 0)}
             initial={{ opacity: 0, scale: 0.6, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.6, y: 20 }}

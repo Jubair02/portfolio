@@ -4,11 +4,12 @@ import { useState, type FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Check, Loader2, AlertCircle } from "lucide-react";
 import { site } from "@/content/site";
+import { createRipple } from "@/lib/ripple";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
 const inputBase =
-  "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 outline-none transition-colors focus:border-[color:var(--primary)] focus:ring-2 focus:ring-[color:var(--ring)]/25 aria-[invalid=true]:border-red-500/70";
+  "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-[color,background-color,border-color,box-shadow] duration-300 hover:border-[color:var(--primary)]/40 focus:border-[color:var(--primary)] focus:bg-[color:var(--muted)]/70 focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ring)_16%,transparent)] aria-[invalid=true]:border-red-500/70";
 
 export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
@@ -173,6 +174,7 @@ export function ContactForm() {
       <button
         type="submit"
         disabled={status === "submitting"}
+        onPointerDown={createRipple}
         className="group relative mt-1 inline-flex h-12 items-center justify-center gap-2 overflow-hidden rounded-full bg-primary px-6 font-medium text-primary-foreground shadow-glow transition-[transform,box-shadow] hover:shadow-glow-lg hover:brightness-110 active:scale-[0.98] disabled:opacity-70"
       >
         {status === "submitting" ? (

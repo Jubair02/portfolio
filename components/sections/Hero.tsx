@@ -10,22 +10,21 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Copy, Check, Sparkles } from "lucide-react";
-import { site, stats } from "@/content/site";
+import { site, stats, github } from "@/content/site";
+import type { HeroData } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { Counter } from "@/components/ui/Counter";
 import { GithubIcon, LinkedinIcon } from "@/components/icons";
+import { HeroBackground } from "./hero/HeroBackground";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-function RoleRotator() {
+function RoleRotator({ roles }: { roles: string[] }) {
   const [index, setIndex] = useState(0);
   useEffect(() => {
-    const id = setInterval(
-      () => setIndex((i) => (i + 1) % site.roles.length),
-      2600
-    );
+    const id = setInterval(() => setIndex((i) => (i + 1) % roles.length), 2600);
     return () => clearInterval(id);
-  }, []);
+  }, [roles.length]);
   return (
     <span className="relative inline-flex h-[1.2em] overflow-hidden align-bottom">
       <AnimatePresence mode="wait">
@@ -37,27 +36,27 @@ function RoleRotator() {
           transition={{ duration: 0.5, ease }}
           className="text-gradient-brand whitespace-nowrap"
         >
-          {site.roles[index]}
+          {roles[index]}
         </motion.span>
       </AnimatePresence>
     </span>
   );
 }
 
-function EmailCopy() {
+function EmailCopy({ email }: { email: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
       type="button"
       onClick={() => {
-        navigator.clipboard?.writeText(site.email);
+        navigator.clipboard?.writeText(email);
         setCopied(true);
         setTimeout(() => setCopied(false), 1800);
       }}
       className="group inline-flex items-center gap-2 font-mono text-sm text-muted-foreground transition-colors hover:text-foreground"
       aria-label="Copy email address"
     >
-      {site.email}
+      {email}
       {copied ? (
         <Check className="size-3.5 text-emerald-500" />
       ) : (
@@ -67,7 +66,7 @@ function EmailCopy() {
   );
 }
 
-export function Hero() {
+export function Hero({ hero }: { hero: HeroData }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -98,7 +97,8 @@ export function Hero() {
       id="top"
       className="relative flex min-h-[100svh] items-center overflow-hidden pt-28 pb-16 sm:pt-32"
     >
-      <div className="container-page">
+      <HeroBackground />
+      <div className="container-page relative z-10">
         <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
           {/* Left */}
           <motion.div
@@ -115,7 +115,7 @@ export function Hero() {
                   <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-70" />
                   <span className="relative inline-flex size-2.5 rounded-full bg-emerald-500" />
                 </span>
-                {site.availability.label}
+                {hero.availabilityLabel}
               </span>
             </motion.div>
 
@@ -124,7 +124,7 @@ export function Hero() {
               variants={item}
               className="mt-7 text-base font-medium text-muted-foreground sm:text-lg"
             >
-              Hi, I&apos;m {site.name} 👋
+              Hi, I&apos;m {hero.name} 👋
             </motion.p>
 
             {/* Headline */}
@@ -143,7 +143,7 @@ export function Hero() {
               className="mt-5 text-xl font-medium sm:text-2xl"
             >
               <span className="text-muted-foreground">A </span>
-              <RoleRotator />
+              <RoleRotator roles={hero.roles} />
             </motion.div>
 
             {/* Subheadline */}
@@ -151,7 +151,7 @@ export function Hero() {
               variants={item}
               className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
             >
-              {site.subheadline}
+              {hero.subheadline}
             </motion.p>
 
             {/* CTAs */}
@@ -159,12 +159,12 @@ export function Hero() {
               variants={item}
               className="mt-9 flex flex-wrap items-center gap-3"
             >
-              <Button href="#work" size="lg">
-                View my work
+              <Button href={hero.primaryCtaHref} size="lg">
+                {hero.primaryCtaLabel}
                 <ArrowUpRight className="size-4" />
               </Button>
-              <Button href="#contact" variant="secondary" size="lg">
-                Get in touch
+              <Button href={hero.secondaryCtaHref} variant="secondary" size="lg">
+                {hero.secondaryCtaLabel}
               </Button>
             </motion.div>
 
@@ -173,7 +173,7 @@ export function Hero() {
               variants={item}
               className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3"
             >
-              <EmailCopy />
+              <EmailCopy email={hero.email} />
               <div className="flex items-center gap-2">
                 <a
                   href={site.socials.github}
@@ -211,13 +211,14 @@ export function Hero() {
             <div className="glass-strong shadow-glow-lg relative overflow-hidden rounded-[2rem] p-2">
               <div className="relative overflow-hidden rounded-[1.5rem]">
                 <Image
-                  src="/jubair-portrait.jpg"
-                  alt={`Portrait of ${site.name}, ${site.role}`}
+                  src={hero.heroImage}
+                  alt={`Portrait of ${hero.name}, ${hero.role}`}
                   width={560}
                   height={560}
                   priority
                   sizes="(max-width: 1024px) 24rem, 28rem"
                   className="aspect-square w-full object-cover"
+                  unoptimized={hero.heroImage.startsWith("http")}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
               </div>
@@ -235,7 +236,7 @@ export function Hero() {
                 </span>
                 <div>
                   <p className="text-lg font-bold leading-none">
-                    <Counter value={20} suffix="+" />
+                    <Counter value={stats[0].value} suffix={stats[0].suffix} />
                   </p>
                   <p className="text-xs text-muted-foreground">Projects</p>
                 </div>
@@ -253,7 +254,7 @@ export function Hero() {
                 </span>
                 <div>
                   <p className="text-lg font-bold leading-none">
-                    <Counter value={24} suffix="" />
+                    <Counter value={github.stats[0].value} />
                   </p>
                   <p className="text-xs text-muted-foreground">Repositories</p>
                 </div>

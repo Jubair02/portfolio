@@ -1,12 +1,13 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
-import { about, site } from "@/content/site";
+import { site } from "@/content/site";
+import type { AboutData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 
-export function About() {
+export function About({ about }: { about: AboutData }) {
   return (
     <Section id="about">
       <SectionHeading
@@ -23,7 +24,7 @@ export function About() {
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--border)]">
               <Image
                 src="/jubair-portrait.webp"
-                alt={site.name}
+                alt={`Portrait of ${site.name}, ${site.role}`}
                 width={640}
                 height={480}
                 sizes="(max-width: 1024px) 100vw, 34rem"

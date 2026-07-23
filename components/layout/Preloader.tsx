@@ -22,8 +22,9 @@ export function Preloader() {
 
     document.body.style.overflow = "hidden";
     let raf = 0;
+    let done = 0;
     const start = performance.now();
-    const duration = 1300;
+    const duration = 650;
 
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
@@ -32,11 +33,16 @@ export function Preloader() {
       if (p < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        setTimeout(() => setLoading(false), 260);
+        done = window.setTimeout(() => setLoading(false), 150);
       }
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(done);
+      // Never leave the page scroll-locked if we unmount mid-load.
+      document.body.style.overflow = "";
+    };
   }, [reduce]);
 
   useEffect(() => {

@@ -43,7 +43,7 @@ export function Reveal({
   return (
     <motion.div
       className={className}
-      initial="hidden"
+      initial={reduce ? "visible" : "hidden"}
       whileInView="visible"
       viewport={{ once, amount }}
       variants={{ hidden, visible }}
@@ -74,10 +74,11 @@ export function RevealGroup({
   once?: boolean;
   amount?: number;
 }) {
+  const reduce = useReducedMotion();
   return (
     <motion.div
       className={className}
-      initial="hidden"
+      initial={reduce ? "visible" : "hidden"}
       whileInView="visible"
       viewport={{ once, amount }}
       variants={{

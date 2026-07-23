@@ -1,0 +1,254 @@
+// Prisma schema — single source of truth for all portfolio content.
+// Everything that used to live in content/site.ts now lives here.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+enum Role {
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  image        String?
+  role         Role     @default(ADMIN)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Singletons (one row each, keyed by a fixed id "singleton")
+// ---------------------------------------------------------------------------
+model Hero {
+  id              String   @id @default("singleton")
+  name            String
+  firstName       String
+  initials        String
+  role            String
+  roles           String[]
+  subheadline     String
+  location        String
+  availabilityOpen   Boolean @default(true)
+  availabilityLabel  String
+  email           String
+  resumeUrl       String
+  heroImage       String?
+  backgroundImage String?
+  primaryCtaLabel String   @default("View my work")
+  primaryCtaHref  String   @default("#work")
+  secondaryCtaLabel String @default("Get in touch")
+  secondaryCtaHref  String @default("#contact")
+  updatedAt       DateTime @updatedAt
+}
+
+model About {
+  id                String   @id @default("singleton")
+  eyebrow           String
+  title             String
+  paragraphs        String[]
+  yearsOfExperience Int      @default(0)
+  education         String?
+  location          String?
+  resumeUrl         String?
+  personalInfo      Json?
+  values            AboutValue[]
+  updatedAt         DateTime @updatedAt
+}
+
+model AboutValue {
+  id          String @id @default(cuid())
+  icon        String
+  title       String
+  description String
+  order       Int    @default(0)
+  about       About  @relation(fields: [aboutId], references: [id], onDelete: Cascade)
+  aboutId     String
+}
+
+model SeoSettings {
+  id              String   @id @default("singleton")
+  siteTitle       String
+  metaDescription String
+  keywords        String[]
+  ogImage         String?
+  favicon         String?
+  updatedAt       DateTime @updatedAt
+}
+
+model SiteSettings {
+  id           String   @id @default("singleton")
+  logo         String?
+  footerText   String?
+  copyright    String?
+  resumeUrl    String?
+  primaryColor String?
+  accentColor  String?
+  siteUrl      String?
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Collections (full CRUD)
+// ---------------------------------------------------------------------------
+model SkillCategory {
+  id     String  @id @default(cuid())
+  icon   String
+  title  String
+  blurb  String?
+  order  Int     @default(0)
+  skills Skill[]
+}
+
+model Skill {
+  id         String        @id @default(cuid())
+  name       String
+  icon       String?
+  level      Int           @default(80)
+  order      Int           @default(0)
+  category   SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  tagline     String
+  description String
+  caseStudy   String?
+  tech        String[]
+  category    String?
+  year        String?
+  featured    Boolean       @default(false)
+  status      ProjectStatus @default(PUBLISHED)
+  gradient    String?
+  icon        String        @default("Sparkles")
+  image       String?
+  screenshots String[]
+  githubUrl   String?
+  liveUrl     String?
+  metrics     Json?
+  order       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Experience {
+  id          String   @id @default(cuid())
+  company     String
+  position    String
+  duration    String
+  location    String?
+  description String?
+  highlights  String[]
+  tags        String[]
+  logo        String?
+  icon        String   @default("Briefcase")
+  order       Int      @default(0)
+}
+
+model Education {
+  id       String  @id @default(cuid())
+  institute String
+  degree   String
+  duration String
+  result   String?
+  logo     String?
+  icon     String  @default("GraduationCap")
+  order    Int     @default(0)
+}
+
+model Certificate {
+  id            String   @id @default(cuid())
+  title         String
+  organization  String
+  date          String
+  image         String?
+  credentialUrl String?
+  icon          String   @default("BadgeCheck")
+  order         Int      @default(0)
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  icon        String
+  title       String
+  description String
+  features    String[]
+  order       Int      @default(0)
+}
+
+model Testimonial {
+  id          String  @id @default(cuid())
+  name        String
+  designation String?
+  company     String?
+  image       String?
+  review      String
+  rating      Int     @default(5)
+  initials    String?
+  order       Int     @default(0)
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read])
+  @@index([createdAt])
+}
+
+model SocialLink {
+  id       String  @id @default(cuid())
+  platform String
+  url      String
+  icon     String?
+  visible  Boolean @default(true)
+  order    Int     @default(0)
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  publicId  String   @unique
+  url       String
+  width     Int?
+  height    Int?
+  format    String?
+  bytes     Int?
+  folder    String?
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  detail    String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

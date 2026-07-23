@@ -1,11 +1,11 @@
 import { ArrowUpRight } from "lucide-react";
-import { projects, site } from "@/content/site";
+import { site, type Project } from "@/content/site";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { ProjectCard } from "./ProjectCard";
 import { GithubIcon } from "@/components/icons";
 
-export function Projects() {
+export function Projects({ projects }: { projects: Project[] }) {
   return (
     <Section id="work" className="border-t border-[color:var(--border)]">
       <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">

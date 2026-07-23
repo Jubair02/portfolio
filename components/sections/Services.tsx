@@ -1,9 +1,9 @@
-import { services } from "@/content/site";
+import type { ServiceData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 
-export function Services() {
+export function Services({ services }: { services: ServiceData[] }) {
   return (
     <Section id="services" className="border-t border-[color:var(--border)]">
       <SectionHeading

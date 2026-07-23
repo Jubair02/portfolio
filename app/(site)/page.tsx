@@ -1,4 +1,15 @@
 import { site } from "@/content/site";
+import {
+  getProjects,
+  getHero,
+  getAbout,
+  getSkills,
+  getExperience,
+  getEducation,
+  getServices,
+  getCertificates,
+  getTestimonials,
+} from "@/lib/data";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Skills } from "@/components/sections/Skills";
@@ -10,6 +21,7 @@ import { Testimonials } from "@/components/sections/Testimonials";
 import { GitHubStats } from "@/components/sections/GitHubStats";
 import { Blog } from "@/components/sections/Blog";
 import { Contact } from "@/components/sections/Contact";
+import { SectionDivider } from "@/components/ui/SectionDivider";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -32,21 +44,48 @@ const jsonLd = {
   ],
 };
 
-export default function Home() {
+// Revalidate periodically; admin mutations also call revalidatePath("/") for
+// near-instant updates after a content change.
+export const revalidate = 60;
+
+export default async function Home() {
+  const [
+    projects,
+    hero,
+    about,
+    skills,
+    experience,
+    education,
+    services,
+    certificates,
+    testimonials,
+  ] = await Promise.all([
+    getProjects(),
+    getHero(),
+    getAbout(),
+    getSkills(),
+    getExperience(),
+    getEducation(),
+    getServices(),
+    getCertificates(),
+    getTestimonials(),
+  ]);
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Hero />
-      <About />
-      <Skills />
-      <Projects />
-      <Experience />
-      <Services />
-      <Certifications />
-      <Testimonials />
+      <Hero hero={hero} />
+      <About about={about} />
+      <Skills categories={skills} />
+      <Projects projects={projects} />
+      <Experience experience={experience} education={education} />
+      <Services services={services} />
+      <Certifications certificates={certificates} />
+      <Testimonials testimonials={testimonials} />
+      <SectionDivider />
       <GitHubStats />
       <Blog />
       <Contact />

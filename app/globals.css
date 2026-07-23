@@ -28,6 +28,15 @@
   --accent: #0891b2;
   --accent-2: #c026d3;
 
+  /* Admin/UI surface tokens (shadcn-compatible) */
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0f;
+  --secondary: #f2f3f5;
+  --secondary-foreground: #0a0a0f;
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+  --gold: #c79320;
+
   --glass-bg: rgba(255, 255, 255, 0.72);
   --glass-border: rgba(10, 12, 20, 0.08);
   --grid-line: rgba(10, 12, 20, 0.045);
@@ -51,6 +60,15 @@
   --accent: #22d3ee;
   --accent-2: #e879f9;
 
+  /* Admin/UI surface tokens (shadcn-compatible) */
+  --popover: #101017;
+  --popover-foreground: #f3f3f6;
+  --secondary: #15151d;
+  --secondary-foreground: #f3f3f6;
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --gold: #e0b84e;
+
   --glass-bg: rgba(17, 17, 24, 0.55);
   --glass-border: rgba(255, 255, 255, 0.08);
   --grid-line: rgba(255, 255, 255, 0.04);
@@ -73,6 +91,13 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-2);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-gold: var(--gold);
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
@@ -283,6 +308,122 @@
 }
 
 /* ----------------------------------------------------------------------------
+ * Lenis smooth scroll
+ * --------------------------------------------------------------------------*/
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------------------
+ * Custom cursor — hide the native cursor only when ours is active.
+ * Gated on (pointer: fine) exactly like the overlay's render condition, so the
+ * native cursor is only ever hidden when the custom one is actually shown.
+ * --------------------------------------------------------------------------*/
+@media (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+/* Click ripple (spawned by the custom cursor) */
+.cursor-ripple {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border-radius: 9999px;
+  border: 1.5px solid color-mix(in oklab, var(--primary) 80%, transparent);
+  pointer-events: none;
+  z-index: 299;
+  animation: cursor-ripple 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes cursor-ripple {
+  0% { transform: scale(0.4); opacity: 0.55; }
+  100% { transform: scale(5); opacity: 0; }
+}
+
+/* ----------------------------------------------------------------------------
+ * Animated gradient border (project cards etc.) — appears on hover
+ * --------------------------------------------------------------------------*/
+@layer utilities {
+  .border-animated::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      120deg,
+      transparent 20%,
+      color-mix(in oklab, var(--primary) 75%, transparent),
+      color-mix(in oklab, var(--accent-2) 75%, transparent),
+      color-mix(in oklab, var(--accent) 60%, transparent),
+      transparent 80%
+    );
+    background-size: 220% 100%;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    animation: borderMove 4.5s linear infinite;
+    pointer-events: none;
+  }
+  .group:hover .border-animated::before,
+  .border-animated:hover::before {
+    opacity: 1;
+  }
+
+  /* Section divider line */
+  .section-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(
+      to right,
+      transparent,
+      color-mix(in oklab, var(--primary) 45%, transparent),
+      color-mix(in oklab, var(--accent-2) 45%, transparent),
+      transparent
+    );
+  }
+}
+@keyframes borderMove {
+  to { background-position: 220% 0; }
+}
+
+/* Material-style button ripple */
+.btn-ripple {
+  position: absolute;
+  border-radius: 9999px;
+  transform: translate(-50%, -50%) scale(0);
+  background: color-mix(in oklab, #fff 55%, transparent);
+  pointer-events: none;
+  animation: btnRipple 0.6s ease-out forwards;
+}
+@keyframes btnRipple {
+  to {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
+}
+
+/* ----------------------------------------------------------------------------
  * Reduced motion — respect user preference
  * --------------------------------------------------------------------------*/
 @media (prefers-reduced-motion: reduce) {
@@ -292,5 +433,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  .cursor-ripple,
+  .border-animated::before {
+    animation: none !important;
   }
 }

@@ -1,3 +1,5 @@
+import type { IconName } from "@/components/icons";
+
 /* =============================================================================
  * SITE CONTENT — single source of truth
  * -----------------------------------------------------------------------------
@@ -17,7 +19,6 @@ export const site = {
     "React & Next.js Engineer",
     "UI Craftsman",
   ],
-  headline: "I build fast, elegant products for the modern web.",
   subheadline:
     "Full-stack developer crafting performant web applications with React, Next.js and .NET — obsessed with clean code, delightful interfaces, and the details that make software feel premium.",
   location: "Bangladesh · Remote friendly",
@@ -26,7 +27,7 @@ export const site = {
     label: "Available for new opportunities",
   },
   email: "jubu01754@gmail.com",
-  resumeUrl: "/resume.pdf", // PLACEHOLDER — drop your resume PDF into /public
+  resumeUrl: "/Resume.pdf",
   url: "https://jubairhossain.dev", // PLACEHOLDER — set to your deployed domain
   socials: {
     github: "https://github.com/Jubair02",
@@ -166,7 +167,8 @@ export type Project = {
   year: string;
   featured: boolean;
   gradient: string; // tailwind gradient stops for the cover
-  icon: string;
+  image?: string; // optional cover image in /public (falls back to gradient)
+  icon: IconName;
   links: { demo?: string; github?: string };
   metrics?: { label: string; value: string }[];
 };
@@ -183,6 +185,7 @@ export const projects: Project[] = [
     year: "2026",
     featured: true,
     gradient: "from-indigo-500 via-violet-500 to-fuchsia-500",
+    image: "/rena_Edu.png",
     icon: "GraduationCap",
     links: {
       demo: "https://jubair02.github.io/Rene-Edu/",
@@ -204,6 +207,7 @@ export const projects: Project[] = [
     year: "2026",
     featured: true,
     gradient: "from-orange-500 via-amber-500 to-rose-500",
+    image: "/food_del.png",
     icon: "Rocket",
     links: {
       demo: "https://my-portfolio-pqee.vercel.app",
@@ -225,6 +229,7 @@ export const projects: Project[] = [
     year: "2026",
     featured: true,
     gradient: "from-cyan-500 via-sky-500 to-blue-600",
+    image: "/quizLab.png",
     icon: "Sparkles",
     links: {
       github: "https://github.com/Jubair02/QuizLab24",

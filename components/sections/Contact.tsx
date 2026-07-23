@@ -83,11 +83,21 @@ export function Contact() {
         </div>
 
         {/* Form */}
-        <Reveal direction="left" delay={0.1}>
-          <div className="glass-strong shadow-glow rounded-4xl p-6 sm:p-8">
-            <ContactForm />
+        <div className="relative">
+          {/* Floating background shapes */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-8 -z-10 overflow-hidden"
+          >
+            <div className="animate-float absolute right-2 top-0 size-40 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--primary)_45%,transparent),transparent_70%)] opacity-40 blur-2xl" />
+            <div className="animate-float-slow absolute -bottom-2 left-4 size-48 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent-2)_40%,transparent),transparent_70%)] opacity-30 blur-2xl" />
           </div>
-        </Reveal>
+          <Reveal direction="left" delay={0.1}>
+            <div className="glass-strong shadow-glow rounded-4xl p-6 sm:p-8">
+              <ContactForm />
+            </div>
+          </Reveal>
+        </div>
       </div>
     </Section>
   );
