@@ -53,6 +53,65 @@ npm run dev
 - Admin panel: <http://localhost:3000/admin> → redirects to `/admin/login`
 - Sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
+## Deploying to Vercel (production migrations)
+
+Migrations are tracked in `prisma/migrations/` (baselined as `0_init`). The
+production database is kept in sync automatically on every deploy.
+
+### 1. Environment variables (Vercel → Project → Settings → Environment Variables)
+
+Add these for **Production** (and Preview, if used):
+
+| Variable | Notes |
+| --- | --- |
+| `DATABASE_URL` | **Pooled** Neon URL (`...-pooler...`). Used by the app at runtime. |
+| `DIRECT_URL` | **Direct/non-pooled** Neon URL (no `-pooler`). Used by `migrate deploy`. **Required** — the build fails without it. |
+| `AUTH_SECRET` | 32-byte base64 secret. |
+| `AUTH_TRUST_HOST` | `true` |
+| `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Image uploads. |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Same cloud name (client-exposed). |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Only needed if you run `db:seed` against prod. |
+| `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` | Optional email delivery. |
+
+### 2. Build & install commands
+
+No Vercel overrides needed — the defaults pick these up from `package.json`:
+
+- `postinstall`: `prisma generate` — regenerates the client after Vercel installs deps.
+- `build`: `prisma migrate deploy && next build` — **applies any pending migrations to the production DB, then builds.** If a migration fails, the deploy fails (so you never ship against an unmigrated schema).
+
+### 3. First production deploy
+
+1. Push the repo to GitHub and import it into Vercel.
+2. Add the env vars above.
+3. Deploy. `migrate deploy` applies `0_init` (already applied on the current
+   Neon DB, so it's a no-op there; on a fresh prod DB it creates all tables).
+4. Seed the initial content/admin **once** against the prod DB (from your
+   machine with the prod `DATABASE_URL`/`DIRECT_URL` in `.env`, or a one-off):
+   `npm run db:seed`.
+
+### 4. Making schema changes going forward
+
+```bash
+# 1. Edit prisma/schema.prisma, then create a migration locally:
+npm run db:migrate -- --name add_something
+# 2. Commit prisma/migrations/** and push.
+# 3. Vercel runs `prisma migrate deploy` during the next build automatically.
+```
+
+> **Neon shadow DB:** `migrate dev` needs a temporary shadow database. If Neon
+> rejects it, add a second Neon DB URL as `SHADOW_DATABASE_URL` and reference it
+> via `shadowDatabaseUrl` in the datasource, or author migrations locally against
+> a throwaway Postgres. `migrate deploy` (production) never needs a shadow DB.
+
+> **Windows note:** `prisma generate` can throw `EPERM: ... rename query_engine`
+> if OneDrive/an editor locks `node_modules`. It's harmless (the client is still
+> generated) and never happens on Vercel's Linux builders. If it blocks you
+> locally, pause OneDrive sync or close the process holding the file.
+
+> **Don't use `prisma db push` anymore** — now that migrations exist, mixing
+> `db push` with migrations causes schema drift. Use `db:migrate` / `db:deploy`.
+
 ## Architecture notes
 
 - **Two independent root layouts** (Next.js multiple-root-layouts):
