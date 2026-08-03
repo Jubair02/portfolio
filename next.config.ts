@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Import only the icons/animations actually used, shrinking the bundle.
     optimizePackageImports: ["lucide-react", "framer-motion"],
+    // Allow image uploads through Server Actions (default cap is 1 MB).
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

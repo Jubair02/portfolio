@@ -24,18 +24,27 @@ export function ImageUpload({
   const [dragging, setDragging] = useState(false);
 
   function handleFile(file: File) {
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image is larger than 8 MB. Please choose a smaller file.");
+      return;
+    }
     const fd = new FormData();
     fd.append("file", file);
     fd.append("folder", folder);
     start(async () => {
-      const res = await uploadImageAction(fd);
-      if (res.error) {
-        toast.error(res.error);
-        return;
-      }
-      if (res.url) {
-        onChange(res.url);
-        toast.success("Image uploaded.");
+      try {
+        const res = await uploadImageAction(fd);
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        if (res.url) {
+          onChange(res.url);
+          toast.success("Image uploaded.");
+        }
+      } catch (err) {
+        console.error("[upload] client error:", err);
+        toast.error("Upload failed. The image may be too large or the connection dropped.");
       }
     });
   }

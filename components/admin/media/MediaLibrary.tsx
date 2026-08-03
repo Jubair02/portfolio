@@ -35,15 +35,24 @@ export function MediaLibrary({ assets }: { assets: Asset[] }) {
   );
 
   function upload(file: File) {
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image is larger than 8 MB. Please choose a smaller file.");
+      return;
+    }
     const fd = new FormData();
     fd.append("file", file);
     fd.append("folder", "portfolio/library");
     start(async () => {
-      const res = await uploadImageAction(fd);
-      if (res.error) toast.error(res.error);
-      else {
-        toast.success("Uploaded.");
-        router.refresh();
+      try {
+        const res = await uploadImageAction(fd);
+        if (res.error) toast.error(res.error);
+        else {
+          toast.success("Uploaded.");
+          router.refresh();
+        }
+      } catch (err) {
+        console.error("[upload] client error:", err);
+        toast.error("Upload failed. The image may be too large or the connection dropped.");
       }
     });
   }
