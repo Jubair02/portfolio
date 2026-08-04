@@ -9,6 +9,12 @@ export const projectSchema = z.object({
   tagline: z.string().min(1, "A short description is required."),
   description: z.string().min(1, "A full description is required."),
   caseStudy: z.string().optional(),
+  metrics: z.array(
+    z.object({
+      label: z.string().min(1, "Label is required."),
+      value: z.string().min(1, "Value is required."),
+    })
+  ),
   tech: z.array(z.string().min(1)),
   category: z.string().optional(),
   year: z.string().optional(),
@@ -31,6 +37,7 @@ export const projectDefaults: ProjectFormValues = {
   tagline: "",
   description: "",
   caseStudy: "",
+  metrics: [],
   tech: [],
   category: "",
   year: "",

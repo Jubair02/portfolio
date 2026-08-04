@@ -5,7 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
 import { projectSchema, type ProjectFormValues } from "@/lib/schemas/project";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 type ActionResult = { ok: boolean; error?: string; fieldErrors?: Record<string, string> };
 
@@ -24,6 +24,7 @@ function toData(v: ProjectFormValues): Prisma.ProjectUncheckedCreateInput {
     tagline: v.tagline.trim(),
     description: v.description.trim(),
     caseStudy: orEmpty(v.caseStudy),
+    metrics: v.metrics.length > 0 ? (v.metrics as Prisma.InputJsonValue) : Prisma.DbNull,
     tech: v.tech,
     category: orEmpty(v.category),
     year: orEmpty(v.year),

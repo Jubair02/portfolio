@@ -23,6 +23,9 @@ export default async function EditProjectPage({
     tagline: p.tagline,
     description: p.description,
     caseStudy: p.caseStudy ?? "",
+    metrics: Array.isArray(p.metrics)
+      ? (p.metrics as { label: string; value: string }[])
+      : [],
     tech: p.tech,
     category: p.category ?? "",
     year: p.year ?? "",

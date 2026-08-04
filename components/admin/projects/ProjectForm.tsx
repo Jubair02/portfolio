@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Plus, Trash2 } from "lucide-react";
 import {
   projectSchema,
   projectDefaults,
@@ -81,6 +81,7 @@ export function ProjectForm({
   const screenshots = watch("screenshots");
   const titleVal = watch("title");
   const slugVal = watch("slug");
+  const metrics = watch("metrics");
 
   function onSubmit(values: ProjectFormValues) {
     start(async () => {
@@ -162,6 +163,52 @@ export function ProjectForm({
 
               <Field label="Case study (optional)" htmlFor="caseStudy">
                 <Textarea id="caseStudy" rows={4} {...register("caseStudy")} />
+              </Field>
+
+              <Field
+                label="Metrics (optional)"
+                hint="Small stat boxes shown under the case study — e.g. Label “Layout” / Value “Fully responsive”."
+              >
+                <div className="space-y-2">
+                  {metrics.map((_, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <Input placeholder="Label" {...register(`metrics.${i}.label`)} />
+                        {errors.metrics?.[i]?.label && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {errors.metrics[i]?.label?.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <Input placeholder="Value" {...register(`metrics.${i}.value`)} />
+                        {errors.metrics?.[i]?.value && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {errors.metrics[i]?.value?.message}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 text-destructive"
+                        aria-label="Remove metric"
+                        onClick={() => setValue("metrics", metrics.filter((_, idx) => idx !== i))}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setValue("metrics", [...metrics, { label: "", value: "" }])}
+                  >
+                    <Plus className="size-4" /> Add metric
+                  </Button>
+                </div>
               </Field>
 
               <Field label="Technologies" error={errors.tech?.message}>

@@ -430,9 +430,10 @@ export async function getProjects(): Promise<Project[]> {
         demo: p.liveUrl ?? undefined,
         github: p.githubUrl ?? undefined,
       },
-      metrics: Array.isArray(p.metrics)
-        ? (p.metrics as unknown as Metric[])
-        : undefined,
+      metrics:
+        Array.isArray(p.metrics) && p.metrics.length > 0
+          ? (p.metrics as unknown as Metric[])
+          : undefined,
     }));
   } catch (err) {
     console.warn(
