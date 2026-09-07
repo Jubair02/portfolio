@@ -1,8 +1,11 @@
 /**
  * Baseline seed — migrates the original content/site.ts data into the database
- * and creates the first admin user. Safe to re-run: it clears content
- * collections and singletons, then recreates them (User, ContactMessage,
- * MediaAsset and ActivityLog are left untouched).
+ * and creates the FIRST admin user (only when no user exists at all).
+ *
+ * ⚠ Re-running REPLACES the content collections and singletons below — any
+ * edits made in the admin panel are overwritten. Treat it as a one-off
+ * bootstrap, not a routine command. User, ContactMessage, MediaAsset and
+ * ActivityLog are left untouched.
  *
  * Run with: npm run db:seed
  */
@@ -28,18 +31,32 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, "");
 
 async function main() {
-  // --- Admin user (upsert by email) --------------------------------------
-  const email = process.env.ADMIN_EMAIL ?? "admin@example.com";
-  const password = process.env.ADMIN_PASSWORD ?? "change-me";
-  const name = process.env.ADMIN_NAME ?? "Site Admin";
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  await prisma.user.upsert({
-    where: { email },
-    update: { name, passwordHash },
-    create: { email, name, passwordHash },
-  });
-  console.log(`✔ Admin user ready: ${email}`);
+  // --- Admin user (first run only) ----------------------------------------
+  // This used to upsert by ADMIN_EMAIL. Once the admin changed their email in
+  // the Profile page, that upsert no longer matched the real account, so a
+  // re-run silently CREATED a second admin with whatever password was sitting
+  // in .env. Bootstrap the very first user only; after that, accounts are
+  // managed from the admin panel.
+  const userCount = await prisma.user.count();
+  if (userCount > 0) {
+    console.log(
+      `↷ Skipping admin creation — ${userCount} user(s) already exist. ` +
+        `Manage accounts from the admin Profile page.`
+    );
+  } else {
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+    const name = process.env.ADMIN_NAME ?? "Site Admin";
+    if (!email || !password) {
+      throw new Error(
+        "No users exist yet and ADMIN_EMAIL / ADMIN_PASSWORD are not set. " +
+          "Set them to create the first admin user (no default is used)."
+      );
+    }
+    const passwordHash = await bcrypt.hash(password, 12);
+    await prisma.user.create({ data: { email, name, passwordHash } });
+    console.log(`✔ First admin user created: ${email}`);
+  }
 
   // --- Clear content (keep users / messages / media / activity) -----------
   await prisma.$transaction([

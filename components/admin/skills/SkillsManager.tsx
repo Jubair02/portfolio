@@ -30,6 +30,7 @@ import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Card, CardContent } from "@/components/admin/ui/card";
 import { DataIcon } from "@/components/icons";
+import { isIconName, type IconName } from "@/lib/icon-names";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import {
   Dialog,
@@ -39,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/admin/ui/dialog";
 import { Field } from "@/components/admin/Field";
+import { IconPicker } from "@/components/admin/IconPicker";
 
 type Skill = { id: string; name: string; level: number };
 type Category = { id: string; icon: string; title: string; blurb: string | null; skills: Skill[] };
@@ -234,7 +236,11 @@ function CategoryDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [icon, setIcon] = useState(editing?.icon ?? "Layers");
+  // A category saved before icons were a closed list may hold a name that never
+  // rendered; fall back to a real one rather than showing an empty picker.
+  const [icon, setIcon] = useState<IconName>(
+    isIconName(editing?.icon) ? editing.icon : "Layers"
+  );
   const [title, setTitle] = useState(editing?.title ?? "");
   const [blurb, setBlurb] = useState(editing?.blurb ?? "");
   const [pending, start] = useTransition();
@@ -256,8 +262,8 @@ function CategoryDialog({
           <DialogTitle>{editing ? "Edit category" : "Add category"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <Field label="Icon" hint="Lucide icon name (e.g. Layers, Server, Database).">
-            <Input value={icon} onChange={(e) => setIcon(e.target.value)} />
+          <Field label="Icon">
+            <IconPicker value={icon} onChange={setIcon} />
           </Field>
           <Field label="Title">
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />

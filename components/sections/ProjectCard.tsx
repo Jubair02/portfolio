@@ -127,33 +127,38 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
             ))}
           </div>
 
-          {/* Footer links */}
-          <div className="mt-auto flex items-center gap-2 pt-6">
-            {project.links.demo && (
-              <a
-                href={project.links.demo}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02] active:scale-95"
-              >
-                Live demo
-                <ArrowUpRight className="size-4" />
-              </a>
-            )}
-            <a
-              href={project.links.github}
-              target="_blank"
-              rel="noreferrer noopener"
-              aria-label={`${project.title} source on GitHub`}
-              className={cn(
-                "inline-flex items-center justify-center gap-1.5 rounded-full border border-[color:var(--border)] px-4 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:border-[color:var(--primary)]/50 hover:text-foreground",
-                !project.links.demo && "flex-1"
+          {/* Footer links — only rendered for links the project actually has,
+              so a project without a repo never shows a hrefless "Code" button. */}
+          {(project.links.demo || project.links.github) && (
+            <div className="mt-auto flex items-center gap-2 pt-6">
+              {project.links.demo && (
+                <a
+                  href={project.links.demo}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-transform hover:scale-[1.02] active:scale-95"
+                >
+                  Live demo
+                  <ArrowUpRight className="size-4" />
+                </a>
               )}
-            >
-              <GithubIcon className="size-4" />
-              Code
-            </a>
-          </div>
+              {project.links.github && (
+                <a
+                  href={project.links.github}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={`${project.title} source on GitHub`}
+                  className={cn(
+                    "inline-flex items-center justify-center gap-1.5 rounded-full border border-[color:var(--border)] px-4 py-2.5 text-sm font-medium text-foreground/80 transition-colors hover:border-[color:var(--primary)]/50 hover:text-foreground",
+                    !project.links.demo && "flex-1"
+                  )}
+                >
+                  <GithubIcon className="size-4" />
+                  Code
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </article>
     </TiltCard>

@@ -1,15 +1,23 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/content/site";
+import { getHero, getSeo } from "@/lib/data";
 
-export default function manifest(): MetadataRoute.Manifest {
+export const revalidate = 3600;
+
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const [hero, seo] = await Promise.all([getHero(), getSeo()]);
   return {
-    name: `${site.name} — ${site.role}`,
-    short_name: site.name,
-    description: site.subheadline,
+    name: seo.siteTitle,
+    short_name: hero.name,
+    description: seo.metaDescription,
+    // Deliberately relative: an absolute start_url pinned to the configured
+    // domain would break installs on any other host (previews, custom domain
+    // swaps) and is the other way SEO files drift off-origin.
+    id: "/",
     start_url: "/",
+    scope: "/",
     display: "standalone",
-    background_color: "#07070b",
-    theme_color: "#07070b",
+    background_color: "#ffffff",
+    theme_color: "#ffffff",
     icons: [
       { src: "/icon", sizes: "64x64", type: "image/png" },
       { src: "/apple-icon", sizes: "180x180", type: "image/png" },

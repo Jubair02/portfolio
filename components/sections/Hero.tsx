@@ -10,11 +10,12 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Copy, Check, Sparkles } from "lucide-react";
-import { site, stats, github } from "@/content/site";
-import type { HeroData } from "@/lib/data";
+import { stats, github } from "@/content/site";
+import type { HeroData, SocialLinkData } from "@/lib/data";
 import { Button } from "@/components/ui/Button";
 import { Counter } from "@/components/ui/Counter";
-import { GithubIcon, LinkedinIcon } from "@/components/icons";
+import { GithubIcon } from "@/components/icons";
+import { SocialIcons } from "@/components/ui/SocialIcons";
 import { HeroBackground } from "./hero/HeroBackground";
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -27,7 +28,11 @@ function RoleRotator({ roles }: { roles: string[] }) {
   }, [roles.length]);
   return (
     <span className="relative inline-flex h-[1.2em] overflow-hidden align-bottom">
-      <AnimatePresence mode="wait">
+      {/* popLayout, not "wait": the outgoing word is pulled out of the layout
+          flow and the incoming one mounts at once, so the two slides overlap.
+          With mode="wait" the slot sat empty for the whole exit duration and
+          the headline visibly blinked on every change. */}
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.span
           key={index}
           initial={{ y: "100%", opacity: 0 }}
@@ -40,6 +45,27 @@ function RoleRotator({ roles }: { roles: string[] }) {
         </motion.span>
       </AnimatePresence>
     </span>
+  );
+}
+
+/**
+ * Renders the CMS headline, painting anything wrapped in **double asterisks**
+ * with the brand gradient. Splitting on a capturing group puts the highlighted
+ * runs at the odd indices.
+ */
+function Headline({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*\*(.+?)\*\*/g).map((part, i) =>
+        i % 2 === 1 ? (
+          <span key={i} className="text-gradient-brand">
+            {part}
+          </span>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
   );
 }
 
@@ -66,7 +92,13 @@ function EmailCopy({ email }: { email: string }) {
   );
 }
 
-export function Hero({ hero }: { hero: HeroData }) {
+export function Hero({
+  hero,
+  socials,
+}: {
+  hero: HeroData;
+  socials: SocialLinkData[];
+}) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({
@@ -132,9 +164,7 @@ export function Hero({ hero }: { hero: HeroData }) {
               variants={item}
               className="mt-3 text-[2.6rem] font-semibold leading-[1.02] tracking-tight sm:text-6xl lg:text-[4.1rem]"
             >
-              I build{" "}
-              <span className="text-gradient-brand">fast, elegant</span> web
-              experiences.
+              <Headline text={hero.headline} />
             </motion.h1>
 
             {/* Rotating role */}
@@ -174,26 +204,12 @@ export function Hero({ hero }: { hero: HeroData }) {
               className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3"
             >
               <EmailCopy email={hero.email} />
-              <div className="flex items-center gap-2">
-                <a
-                  href={site.socials.github}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label="GitHub"
-                  className="grid size-9 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
-                >
-                  <GithubIcon className="size-4" />
-                </a>
-                <a
-                  href={site.socials.linkedin}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  aria-label="LinkedIn"
-                  className="grid size-9 place-items-center rounded-full border border-[color:var(--border)] text-foreground/70 transition-colors hover:text-foreground hover:border-[color:var(--primary)]/50"
-                >
-                  <LinkedinIcon className="size-4" />
-                </a>
-              </div>
+              <SocialIcons
+                links={socials}
+                limit={4}
+                linkClassName="size-9"
+                iconClassName="size-4"
+              />
             </motion.div>
           </motion.div>
 

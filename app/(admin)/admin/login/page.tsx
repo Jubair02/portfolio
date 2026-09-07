@@ -39,7 +39,12 @@ export default function LoginPage() {
     const res = await signIn("credentials", { ...values, redirect: false });
     setSubmitting(false);
     if (res?.error) {
-      toast.error("Invalid email or password.");
+      // Deliberately generic: the server also returns this when the attempt was
+      // blocked by the lockout, so a probe learns nothing either way.
+      toast.error("Invalid email or password.", {
+        description:
+          "Repeated failed attempts are temporarily blocked — wait a few minutes before retrying.",
+      });
       return;
     }
     toast.success("Welcome back.");

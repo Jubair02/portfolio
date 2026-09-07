@@ -3,17 +3,27 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { nav, site } from "@/content/site";
+import { nav } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/Button";
-import { GithubIcon, LinkedinIcon } from "@/components/icons";
+import { PlatformIcon, SocialIcons } from "@/components/ui/SocialIcons";
 import { smoothScrollTo, useLenis } from "@/components/providers/SmoothScroll";
 
 const sectionIds = nav.map((n) => n.href.replace("#", ""));
 
-export function Navbar() {
+export function Navbar({
+  brand,
+  socials,
+}: {
+  brand: { name: string; initials: string };
+  socials: { platform: string; url: string }[];
+}) {
   const lenis = useLenis();
+  // The condensed bar has room for a single icon: prefer GitHub, else the
+  // first link the admin has marked visible.
+  const primarySocial =
+    socials.find((s) => s.platform.toLowerCase().includes("github")) ?? socials[0];
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState<string>("");
@@ -116,7 +126,7 @@ export function Navbar() {
             smoothScrollTo(lenis, 0);
           }}
           className="group flex items-center gap-2.5"
-          aria-label={`${site.name} — home`}
+          aria-label={`${brand.name} — home`}
         >
           <span
             className={cn(
@@ -124,10 +134,10 @@ export function Navbar() {
               scrolled ? "size-8 text-xs" : "size-9 text-sm"
             )}
           >
-            {site.initials}
+            {brand.initials}
           </span>
           <span className="hidden text-sm font-semibold tracking-tight sm:block">
-            {site.name}
+            {brand.name}
           </span>
         </a>
 
@@ -164,15 +174,17 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          <a
-            href={site.socials.github}
-            target="_blank"
-            rel="noreferrer noopener"
-            aria-label="GitHub"
-            className="hidden size-10 place-items-center rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/50 text-foreground/80 transition-colors hover:text-foreground sm:grid"
-          >
-            <GithubIcon className="size-[1.15rem]" />
-          </a>
+          {primarySocial && (
+            <a
+              href={primarySocial.url}
+              target={primarySocial.url.startsWith("http") ? "_blank" : undefined}
+              rel="noreferrer noopener"
+              aria-label={primarySocial.platform}
+              className="hidden size-10 place-items-center rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/50 text-foreground/80 transition-colors hover:text-foreground sm:grid"
+            >
+              <PlatformIcon platform={primarySocial.platform} className="size-[1.15rem]" />
+            </a>
+          )}
           <ThemeToggle className="hidden sm:grid" />
           <div className="hidden lg:block">
             <Button href="#contact" size="sm" magnetic>
@@ -245,24 +257,7 @@ export function Navbar() {
 
               <div className="mt-5 flex items-center justify-between border-t border-[color:var(--border)] pt-5">
                 <div className="flex items-center gap-2">
-                  <a
-                    href={site.socials.github}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label="GitHub"
-                    className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/80"
-                  >
-                    <GithubIcon className="size-5" />
-                  </a>
-                  <a
-                    href={site.socials.linkedin}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    aria-label="LinkedIn"
-                    className="grid size-10 place-items-center rounded-full border border-[color:var(--border)] text-foreground/80"
-                  >
-                    <LinkedinIcon className="size-5" />
-                  </a>
+                  <SocialIcons links={socials} limit={3} iconClassName="size-5" />
                   <ThemeToggle />
                 </div>
                 <Button href="#contact" size="sm" onClick={() => setOpen(false)}>

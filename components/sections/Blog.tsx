@@ -11,7 +11,13 @@ function formatDate(iso: string) {
   });
 }
 
+/** A post is only shown once it points at a real article. */
+const published = posts.filter((p) => p.href && p.href !== "#");
+
 export function Blog() {
+  // Nothing written yet — render nothing rather than cards that go nowhere.
+  if (published.length === 0) return null;
+
   return (
     <Section id="blog" className="border-t border-[color:var(--border)]">
       <SectionHeading
@@ -21,10 +27,12 @@ export function Blog() {
       />
 
       <div className="mt-14 grid gap-6 md:grid-cols-3">
-        {posts.map((post, i) => (
+        {published.map((post, i) => (
           <Reveal key={post.title} delay={0.07 * i}>
             <a
               href={post.href}
+              target={post.href.startsWith("http") ? "_blank" : undefined}
+              rel="noreferrer noopener"
               className="card-hover surface group flex h-full flex-col rounded-3xl p-6 hover:-translate-y-1 hover:border-[color:var(--primary)]/40 hover:shadow-glow"
             >
               <div className="flex items-center justify-between">

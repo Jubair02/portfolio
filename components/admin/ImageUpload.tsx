@@ -5,6 +5,7 @@ import Image from "next/image";
 import { UploadCloud, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { uploadImageAction } from "@/lib/actions/upload";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Button } from "@/components/admin/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -24,8 +25,8 @@ export function ImageUpload({
   const [dragging, setDragging] = useState(false);
 
   function handleFile(file: File) {
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image is larger than 8 MB. Please choose a smaller file.");
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(`Image is larger than ${MAX_UPLOAD_LABEL}. Please choose a smaller file.`);
       return;
     }
     const fd = new FormData();

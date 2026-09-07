@@ -6,6 +6,8 @@ import { ProjectCard } from "./ProjectCard";
 import { GithubIcon } from "@/components/icons";
 
 export function Projects({ projects }: { projects: Project[] }) {
+  // Nothing published — hide the section rather than render a bare heading.
+  if (projects.length === 0) return null;
   return (
     <Section id="work" className="border-t border-[color:var(--border)]">
       <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">

@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { unstable_update } from "@/auth";
 import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
 
 const profileSchema = z.object({
@@ -29,7 +30,10 @@ export async function updateProfile(values: Record<string, unknown>): Promise<Ac
       where: { id: admin.id },
       data: { name, email, image: image || null },
     });
+    // Refresh the JWT so the shell shows the new name/email immediately.
+    await unstable_update({ user: { name, email } });
     revalidatePath("/admin/profile");
+    revalidatePath("/admin", "layout");
     return { ok: true };
   } catch {
     return { ok: false, error: "Could not update your profile." };

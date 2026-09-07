@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CheckCircle2, MapPin } from "lucide-react";
 import type { ExperienceData, EducationData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
@@ -11,6 +12,10 @@ type TimelineEntry = {
   location?: string | null;
   title: string;
   org: string;
+  /** Uploaded company / institute logo, shown on the timeline marker. */
+  logo?: string | null;
+  /** Free-text summary shown above the bulleted highlights. */
+  description?: string | null;
   highlights: string[];
   tags: string[];
 };
@@ -30,6 +35,8 @@ export function Experience({
       location: e.location,
       title: e.position,
       org: e.company,
+      logo: e.logo,
+      description: e.description,
       highlights: e.highlights,
       tags: e.tags,
     })),
@@ -40,10 +47,14 @@ export function Experience({
       location: null,
       title: e.degree,
       org: e.institute,
+      logo: e.logo,
+      description: null,
       highlights: e.result ? [`Result: ${e.result}`] : [],
       tags: [],
     })),
   ];
+
+  if (entries.length === 0) return null;
 
   return (
     <Section id="experience" className="border-t border-[color:var(--border)]">
@@ -56,8 +67,18 @@ export function Experience({
       <ol className="relative mt-14 ml-4 space-y-6 border-l border-[color:var(--border)] pl-8 sm:ml-5 sm:pl-10">
         {entries.map((item, i) => (
           <li key={item.key} className="relative">
-            <span className="absolute -left-[3.05rem] top-0 grid size-9 place-items-center rounded-full border border-[color:var(--border)] bg-background text-primary shadow-glow sm:-left-[3.55rem]">
-              <DataIcon name={item.icon as never} className="size-4" />
+            <span className="absolute -left-[3.05rem] top-0 grid size-9 place-items-center overflow-hidden rounded-full border border-[color:var(--border)] bg-background text-primary shadow-glow sm:-left-[3.55rem]">
+              {item.logo ? (
+                <Image
+                  src={item.logo}
+                  alt={`${item.org} logo`}
+                  width={36}
+                  height={36}
+                  className="size-full object-cover"
+                />
+              ) : (
+                <DataIcon name={item.icon as never} className="size-4" />
+              )}
             </span>
             <Reveal direction="up" delay={0.04 * i}>
               <div className="card-hover surface rounded-3xl p-6 hover:border-[color:var(--primary)]/40 hover:shadow-glow">
@@ -74,6 +95,11 @@ export function Experience({
                 </div>
                 <h3 className="mt-3 text-xl font-semibold tracking-tight">{item.title}</h3>
                 <p className="text-sm font-medium text-muted-foreground">{item.org}</p>
+                {item.description && (
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {item.description}
+                  </p>
+                )}
                 {item.highlights.length > 0 && (
                   <ul className="mt-4 space-y-2">
                     {item.highlights.map((h, hi) => (

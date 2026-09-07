@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/admin/ui/select";
 import { Field } from "@/components/admin/Field";
+import { IconPicker } from "@/components/admin/IconPicker";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TagsInput } from "@/components/admin/TagsInput";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
@@ -39,7 +40,8 @@ export type FieldType =
   | "image"
   | "tags"
   | "switch"
-  | "select";
+  | "select"
+  | "icon";
 
 export type FieldConfig = {
   name: string;
@@ -49,6 +51,7 @@ export type FieldConfig = {
   placeholder?: string;
   folder?: string;
   options?: { label: string; value: string }[];
+  optional?: boolean; // icon fields only: allow clearing the value
   full?: boolean; // span both columns
   defaultValue?: unknown;
 };
@@ -66,6 +69,8 @@ function defaultFor(f: FieldConfig): unknown {
       return 0;
     case "select":
       return f.options?.[0]?.value ?? "";
+    case "icon":
+      return f.optional ? "" : "Sparkles";
     default:
       return "";
   }
@@ -235,6 +240,20 @@ function EntityDialog({
                 {f.type === "image" && (
                   <ImageUpload value={String(values[f.name] ?? "")} folder={f.folder} onChange={(url) => set(f.name, url)} />
                 )}
+                {f.type === "icon" &&
+                  // Split so IconPicker's props discriminate on `optional`.
+                  (f.optional ? (
+                    <IconPicker
+                      value={String(values[f.name] ?? "")}
+                      optional
+                      onChange={(v) => set(f.name, v)}
+                    />
+                  ) : (
+                    <IconPicker
+                      value={String(values[f.name] ?? "")}
+                      onChange={(v) => set(f.name, v)}
+                    />
+                  ))}
                 {f.type === "select" && (
                   <Select value={String(values[f.name] ?? "")} onValueChange={(v) => set(f.name, v)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>

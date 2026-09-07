@@ -141,7 +141,10 @@ export function MessagesInbox({
                     </div>
                     <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{m.message}</p>
                     <p className="mt-2 text-xs text-muted-foreground/70">
-                      {new Date(m.createdAt).toLocaleString()}
+                      {/* Rendered in the viewer's locale/timezone; the server value may differ. */}
+                      <time dateTime={m.createdAt} suppressHydrationWarning>
+                        {new Date(m.createdAt).toLocaleString()}
+                      </time>
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">

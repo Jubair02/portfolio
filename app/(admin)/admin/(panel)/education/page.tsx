@@ -10,7 +10,7 @@ const fields: FieldConfig[] = [
   { name: "institute", label: "Institute", type: "text" },
   { name: "duration", label: "Duration", type: "text", placeholder: "2021 — 2026" },
   { name: "result", label: "Result / GPA", type: "text" },
-  { name: "icon", label: "Icon", type: "text", hint: "Lucide icon (e.g. GraduationCap)" },
+  { name: "icon", label: "Icon", type: "icon", defaultValue: "GraduationCap" },
   { name: "logo", label: "Logo", type: "image", folder: "portfolio/education" },
 ];
 

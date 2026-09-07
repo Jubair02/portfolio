@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { iconNameSchema } from "@/lib/schemas/icon";
 
 export const projectSchema = z.object({
   title: z.string().min(1, "Title is required."),
@@ -21,7 +22,7 @@ export const projectSchema = z.object({
   featured: z.boolean(),
   status: z.enum(["DRAFT", "PUBLISHED"]),
   gradient: z.string().optional(),
-  icon: z.string().min(1),
+  icon: iconNameSchema,
   image: z.string().optional(),
   screenshots: z.array(z.string()),
   githubUrl: z.string().optional(),

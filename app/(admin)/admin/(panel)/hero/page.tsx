@@ -13,6 +13,7 @@ export default async function HeroAdminPage() {
     initials: h.initials,
     role: h.role,
     roles: h.roles,
+    headline: h.headline,
     subheadline: h.subheadline,
     location: h.location,
     availabilityOpen: h.availabilityOpen,

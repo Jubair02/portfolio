@@ -23,7 +23,7 @@ const fields: FieldConfig[] = [
     ].map((p) => ({ label: p, value: p })),
   },
   { name: "url", label: "URL", type: "text", placeholder: "https://… or mailto: / tel:" },
-  { name: "icon", label: "Icon", type: "text", hint: "Optional Lucide icon name" },
+  { name: "icon", label: "Icon", type: "icon", optional: true, hint: "Optional — overrides the platform's default icon." },
   { name: "visible", label: "Visible on site", type: "switch", defaultValue: true },
 ];
 

@@ -3,10 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { adminNav } from "./nav";
-import { Badge } from "@/components/admin/ui/badge";
 import { cn } from "@/lib/utils";
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  user,
+  onNavigate,
+}: {
+  user: { name?: string | null; email?: string | null };
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
 
   return (
@@ -31,22 +36,6 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               : pathname.startsWith(item.href);
           const Icon = item.icon;
 
-          if (!item.ready) {
-            return (
-              <span
-                key={item.href}
-                className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground/60"
-                title="Coming in a later phase"
-              >
-                <Icon className="size-4 shrink-0" />
-                <span className="flex-1">{item.label}</span>
-                <Badge variant="secondary" className="text-[10px]">
-                  Soon
-                </Badge>
-              </span>
-            );
-          }
-
           return (
             <Link
               key={item.href}
@@ -67,8 +56,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         })}
       </nav>
 
-      <div className="border-t border-border p-3 text-xs text-muted-foreground">
-        <p>Signed in as admin</p>
+      <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
+        <p className="truncate font-medium text-foreground/80">{user.name || "Admin"}</p>
+        {user.email && <p className="truncate">{user.email}</p>}
       </div>
     </div>
   );

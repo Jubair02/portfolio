@@ -1,9 +1,14 @@
 /**
  * Server-side data-access layer for the PUBLIC site.
  *
- * Reads live content from the database. If the DB is unreachable or empty
- * (e.g. before the first seed), it falls back to the static content in
- * content/site.ts so the site always renders. Once seeded, DB data wins.
+ * Reads live content from the database. Falls back to the static content in
+ * content/site.ts ONLY when the query throws (DB unreachable / not migrated),
+ * so the site still renders during an outage.
+ *
+ * An empty table is a legitimate, editor-chosen state — not a failure. Zero
+ * rows returns an empty list and the matching public section hides itself.
+ * Treating "empty" as "unavailable" made it impossible to clear a section from
+ * the admin: deleting every row simply resurrected the static placeholders.
  */
 import { prisma } from "@/lib/prisma";
 import {
@@ -33,8 +38,10 @@ export type ExperienceData = {
   position: string;
   duration: string;
   location: string | null;
+  description: string | null;
   highlights: string[];
   tags: string[];
+  logo: string | null;
   icon: IconName;
 };
 
@@ -43,6 +50,7 @@ export type EducationData = {
   degree: string;
   duration: string;
   result: string | null;
+  logo: string | null;
   icon: IconName;
 };
 
@@ -72,7 +80,12 @@ export type TestimonialData = {
   initials: string | null;
 };
 
-export type SocialLinkData = { platform: string; url: string };
+export type SocialLinkData = {
+  platform: string;
+  url: string;
+  /** Optional Lucide icon name overriding the platform-derived default. */
+  icon: string | null;
+};
 
 export type SeoData = {
   siteTitle: string;
@@ -98,6 +111,7 @@ export type HeroData = {
   initials: string;
   role: string;
   roles: string[];
+  headline: string;
   subheadline: string;
   location: string;
   availabilityOpen: boolean;
@@ -124,6 +138,7 @@ const heroFallback: HeroData = {
   initials: site.initials,
   role: site.role,
   roles: [...site.roles],
+  headline: "I build **fast, elegant** web experiences.",
   subheadline: site.subheadline,
   location: site.location,
   availabilityOpen: site.availability.open,
@@ -158,6 +173,7 @@ export async function getHero(): Promise<HeroData> {
       initials: h.initials,
       role: h.role,
       roles: h.roles,
+      headline: h.headline,
       subheadline: h.subheadline,
       location: h.location,
       availabilityOpen: h.availabilityOpen,
@@ -203,7 +219,6 @@ export async function getSkills(): Promise<SkillCategoryData[]> {
       orderBy: { order: "asc" },
       include: { skills: { orderBy: { order: "asc" } } },
     });
-    if (cats.length === 0) throw new Error("empty");
     return cats.map((c) => ({
       icon: c.icon as IconName,
       title: c.title,
@@ -223,14 +238,15 @@ export async function getSkills(): Promise<SkillCategoryData[]> {
 export async function getExperience(): Promise<ExperienceData[]> {
   try {
     const rows = await prisma.experience.findMany({ orderBy: { order: "asc" } });
-    if (rows.length === 0) throw new Error("empty");
     return rows.map((e) => ({
       company: e.company,
       position: e.position,
       duration: e.duration,
       location: e.location,
+      description: e.description,
       highlights: e.highlights,
       tags: e.tags,
+      logo: e.logo,
       icon: e.icon as IconName,
     }));
   } catch {
@@ -239,8 +255,10 @@ export async function getExperience(): Promise<ExperienceData[]> {
       position: e.role,
       duration: e.period,
       location: e.location || null,
+      description: null,
       highlights: [...e.highlights],
       tags: [...e.tags],
+      logo: null,
       icon: e.icon as IconName,
     }));
   }
@@ -254,6 +272,7 @@ export async function getEducation(): Promise<EducationData[]> {
       degree: e.degree,
       duration: e.duration,
       result: e.result,
+      logo: e.logo,
       icon: e.icon as IconName,
     }));
   } catch {
@@ -263,6 +282,7 @@ export async function getEducation(): Promise<EducationData[]> {
         degree: "B.Sc. in Computer Science & Engineering",
         duration: "2021 — 2026",
         result: null,
+        logo: null,
         icon: "GraduationCap",
       },
     ];
@@ -272,7 +292,6 @@ export async function getEducation(): Promise<EducationData[]> {
 export async function getServices(): Promise<ServiceData[]> {
   try {
     const rows = await prisma.service.findMany({ orderBy: { order: "asc" } });
-    if (rows.length === 0) throw new Error("empty");
     return rows.map((s) => ({
       icon: s.icon as IconName,
       title: s.title,
@@ -292,7 +311,6 @@ export async function getServices(): Promise<ServiceData[]> {
 export async function getCertificates(): Promise<CertificateData[]> {
   try {
     const rows = await prisma.certificate.findMany({ orderBy: { order: "asc" } });
-    if (rows.length === 0) throw new Error("empty");
     return rows.map((c) => ({
       title: c.title,
       organization: c.organization,
@@ -316,7 +334,6 @@ export async function getCertificates(): Promise<CertificateData[]> {
 export async function getTestimonials(): Promise<TestimonialData[]> {
   try {
     const rows = await prisma.testimonial.findMany({ orderBy: { order: "asc" } });
-    if (rows.length === 0) throw new Error("empty");
     return rows.map((t) => ({
       name: t.name,
       designation: t.designation,
@@ -395,13 +412,16 @@ export async function getSocialLinks(): Promise<SocialLinkData[]> {
       where: { visible: true },
       orderBy: { order: "asc" },
     });
-    if (rows.length === 0) throw new Error("empty");
-    return rows.map((s) => ({ platform: s.platform, url: s.url }));
+    return rows.map((s) => ({
+      platform: s.platform,
+      url: s.url,
+      icon: s.icon || null,
+    }));
   } catch {
     return [
-      { platform: "GitHub", url: site.socials.github },
-      { platform: "LinkedIn", url: site.socials.linkedin },
-      { platform: "Email", url: site.socials.email },
+      { platform: "GitHub", url: site.socials.github, icon: null },
+      { platform: "LinkedIn", url: site.socials.linkedin, icon: null },
+      { platform: "Email", url: site.socials.email, icon: null },
     ];
   }
 }
@@ -413,7 +433,6 @@ export async function getProjects(): Promise<Project[]> {
       where: { status: "PUBLISHED" },
       orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     });
-    if (rows.length === 0) return staticProjects;
 
     return rows.map((p) => ({
       title: p.title,

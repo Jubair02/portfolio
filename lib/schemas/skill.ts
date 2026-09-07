@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { iconNameSchema } from "@/lib/schemas/icon";
 
 export const categorySchema = z.object({
-  icon: z.string().min(1, "Icon is required."),
+  icon: iconNameSchema,
   title: z.string().min(1, "Title is required."),
   blurb: z.string().optional(),
 });

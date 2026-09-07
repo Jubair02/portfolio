@@ -20,12 +20,14 @@ import {
   Star,
   Calendar,
 } from "lucide-react";
+import type { IconName } from "@/lib/icon-names";
 
 type IconProps = { className?: string };
 type IconComponent = ComponentType<IconProps & SVGProps<SVGSVGElement>>;
 
-/* Map string keys used in content/site.ts to real icon components. */
-const iconMap: Record<string, IconComponent> = {
+/* Map string keys used in content/site.ts to real icon components. Typed
+ * against ICON_NAMES, so the list and the map can't drift apart. */
+const iconMap: Record<IconName, IconComponent> = {
   Gauge,
   Sparkles,
   ShieldCheck,
@@ -48,7 +50,7 @@ const iconMap: Record<string, IconComponent> = {
 };
 
 /** Valid icon keys — data files are typed against this so typos fail to build. */
-export type IconName = keyof typeof iconMap;
+export type { IconName };
 
 /** Render a lucide icon by its string name (from data files). */
 export function DataIcon({

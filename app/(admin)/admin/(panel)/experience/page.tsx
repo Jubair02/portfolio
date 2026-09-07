@@ -14,7 +14,7 @@ const fields: FieldConfig[] = [
   { name: "company", label: "Company", type: "text" },
   { name: "duration", label: "Duration", type: "text", placeholder: "2024 — Present" },
   { name: "location", label: "Location", type: "text" },
-  { name: "icon", label: "Icon", type: "text", hint: "Lucide icon (e.g. Briefcase, Code2)" },
+  { name: "icon", label: "Icon", type: "icon", defaultValue: "Briefcase" },
   { name: "logo", label: "Company logo", type: "image", folder: "portfolio/experience" },
   { name: "description", label: "Description", type: "textarea" },
   { name: "highlights", label: "Highlights", type: "tags", hint: "Press Enter after each point." },

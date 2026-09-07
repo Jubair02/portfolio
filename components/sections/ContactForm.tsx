@@ -5,8 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Check, Loader2, AlertCircle } from "lucide-react";
 import { site } from "@/content/site";
 import { createRipple } from "@/lib/ripple";
+import { CONTACT_LIMITS, CONTACT_MESSAGE_MIN } from "@/lib/contact-limits";
 
 type Status = "idle" | "submitting" | "success" | "error";
+
+const GENERIC_ERROR =
+  "Something went wrong sending your message. Please email me directly.";
 
 const inputBase =
   "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-[color,background-color,border-color,box-shadow] duration-300 hover:border-[color:var(--primary)]/40 focus:border-[color:var(--primary)] focus:bg-[color:var(--muted)]/70 focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ring)_16%,transparent)] aria-[invalid=true]:border-red-500/70";
@@ -23,14 +27,21 @@ export function ContactForm() {
     const name = String(data.get("name") ?? "").trim();
     const email = String(data.get("email") ?? "").trim();
     const message = String(data.get("message") ?? "").trim();
+    const website = String(data.get("website") ?? "");
 
     const next: Record<string, string> = {};
     if (!name) next.name = "Please enter your name.";
+    else if (name.length > CONTACT_LIMITS.name)
+      next.name = `Please keep your name under ${CONTACT_LIMITS.name} characters.`;
     if (!email) next.email = "Please enter your email.";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       next.email = "That email doesn't look right.";
-    if (!message || message.length < 10)
-      next.message = "Tell me a little more (10+ characters).";
+    else if (email.length > CONTACT_LIMITS.email)
+      next.email = "That email is too long.";
+    if (!message || message.length < CONTACT_MESSAGE_MIN)
+      next.message = `Tell me a little more (${CONTACT_MESSAGE_MIN}+ characters).`;
+    else if (message.length > CONTACT_LIMITS.message)
+      next.message = `Please keep it under ${CONTACT_LIMITS.message} characters.`;
 
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -41,16 +52,22 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, website }),
       });
-      if (!res.ok) throw new Error("Request failed");
+      if (!res.ok) {
+        // The API returns a human-readable reason when it throttles a sender.
+        const payload = (await res.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        setStatus("error");
+        setErrorMsg(payload?.error || GENERIC_ERROR);
+        return;
+      }
       setStatus("success");
       form.reset();
     } catch {
       setStatus("error");
-      setErrorMsg(
-        "Something went wrong sending your message. Please email me directly."
-      );
+      setErrorMsg(GENERIC_ERROR);
     }
   }
 
@@ -82,6 +99,22 @@ export function ContactForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      {/*
+        Honeypot. Positioned off-screen rather than display:none, which more
+        bots know to skip, and hidden from assistive tech. A filled value is
+        silently discarded server-side.
+      */}
+      <div aria-hidden className="absolute left-[-9999px] size-0 overflow-hidden">
+        <label htmlFor="contact-website">Website</label>
+        <input
+          id="contact-website"
+          name="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label
@@ -95,6 +128,7 @@ export function ContactForm() {
             name="name"
             type="text"
             autoComplete="name"
+            maxLength={CONTACT_LIMITS.name}
             placeholder="Ada Lovelace"
             aria-invalid={!!errors.name}
             aria-describedby={errors.name ? "name-error" : undefined}
@@ -118,6 +152,7 @@ export function ContactForm() {
             name="email"
             type="email"
             autoComplete="email"
+            maxLength={CONTACT_LIMITS.email}
             placeholder="you@company.com"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
@@ -142,6 +177,7 @@ export function ContactForm() {
           id="message"
           name="message"
           rows={5}
+          maxLength={CONTACT_LIMITS.message}
           placeholder="Tell me about your project, role, or idea…"
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? "message-error" : undefined}

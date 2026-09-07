@@ -29,6 +29,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/card";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TagsInput } from "@/components/admin/TagsInput";
+import { IconPicker } from "@/components/admin/IconPicker";
 
 function Field({
   label,
@@ -82,6 +83,7 @@ export function ProjectForm({
   const titleVal = watch("title");
   const slugVal = watch("slug");
   const metrics = watch("metrics");
+  const iconVal = watch("icon");
 
   function onSubmit(values: ProjectFormValues) {
     start(async () => {
@@ -346,12 +348,11 @@ export function ProjectForm({
               <Field label="Live URL" htmlFor="liveUrl">
                 <Input id="liveUrl" placeholder="https://…" {...register("liveUrl")} />
               </Field>
-              <Field
-                label="Icon"
-                htmlFor="icon"
-                hint="Lucide icon name (e.g. Rocket, Server, Sparkles). Used when no cover image."
-              >
-                <Input id="icon" {...register("icon")} />
+              <Field label="Icon" hint="Used when there is no cover image.">
+                <IconPicker
+                  value={iconVal ?? ""}
+                  onChange={(v) => setValue("icon", v, { shouldDirty: true })}
+                />
               </Field>
               <Field
                 label="Gradient"

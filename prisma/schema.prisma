@@ -39,6 +39,7 @@ model Hero {
   initials        String
   role            String
   roles           String[]
+  headline        String   @default("I build **fast, elegant** web experiences.")
   subheadline     String
   location        String
   availabilityOpen   Boolean @default(true)
@@ -251,4 +252,15 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// Fixed-window counters for abuse protection (contact form, admin login).
+/// Kept in the DB rather than in memory so the limit holds across the many
+/// short-lived serverless instances a Vercel deployment runs.
+model RateLimit {
+  id        String   @id
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([expiresAt])
 }

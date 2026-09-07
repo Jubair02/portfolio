@@ -23,10 +23,16 @@ export const authConfig = {
       if (isAdminArea) return isLoggedIn; // redirects to signIn page when false
       return true;
     },
-    jwt({ token, user }) {
+    jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id as string;
         token.role = (user as { role?: string }).role ?? "ADMIN";
+      }
+      // Profile page calls unstable_update({ user: { name, email } }) after a save
+      // so the topbar/sidebar reflect the change without a re-login.
+      if (trigger === "update" && session?.user) {
+        if (typeof session.user.name === "string") token.name = session.user.name;
+        if (typeof session.user.email === "string") token.email = session.user.email;
       }
       return token;
     },

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "../globals.css";
 import { site } from "@/content/site";
 import { getSocialLinks, getSeo, getSiteSettings } from "@/lib/data";
+import { normalizeSiteUrl } from "@/lib/site-url";
 import { geistSans, geistMono } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
@@ -14,9 +15,16 @@ import { ScrollProgress } from "@/components/layout/ScrollProgress";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [seo, settings] = await Promise.all([getSeo(), getSiteSettings()]);
-  const url = settings.siteUrl || site.url;
+  // `normalizeSiteUrl` never throws: an unparseable value saved in Site
+  // Settings would otherwise turn every public request into a 500.
+  const url = normalizeSiteUrl(settings.siteUrl);
+  const metadataBase = new URL(url);
+  // A file-based opengraph-image is only picked up when `openGraph.images` is
+  // absent — declaring the key as `undefined` suppressed it and left shares
+  // with no preview. Point at the route explicitly instead.
+  const ogImage = seo.ogImage || "/opengraph-image";
   return {
-    metadataBase: new URL(url),
+    metadataBase,
     title: { default: seo.siteTitle, template: `%s · ${site.name}` },
     description: seo.metaDescription,
     applicationName: `${site.name} Portfolio`,
@@ -31,15 +39,17 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: `${site.name} — Portfolio`,
       title: seo.siteTitle,
       description: seo.metaDescription,
-      images: seo.ogImage ? [seo.ogImage] : undefined,
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
       title: seo.siteTitle,
       description: seo.metaDescription,
       creator: "@Jubair02",
+      images: [ogImage],
     },
-    icons: seo.favicon ? { icon: seo.favicon } : undefined,
+    // No `icons` here on purpose: the app/icon.tsx file convention always
+    // wins over metadata, so it reads the SEO "Favicon" field itself.
     robots: {
       index: true,
       follow: true,

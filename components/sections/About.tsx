@@ -1,13 +1,20 @@
 import Image from "next/image";
 import { ArrowUpRight } from "lucide-react";
-import { site } from "@/content/site";
-import type { AboutData } from "@/lib/data";
+import type { AboutData, HeroData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
 
-export function About({ about }: { about: AboutData }) {
+export function About({
+  about,
+  hero,
+  resumeUrl,
+}: {
+  about: AboutData;
+  hero: HeroData;
+  resumeUrl: string;
+}) {
   return (
     <Section id="about">
       <SectionHeading
@@ -24,7 +31,7 @@ export function About({ about }: { about: AboutData }) {
             <div className="relative overflow-hidden rounded-3xl border border-[color:var(--border)]">
               <Image
                 src="/jubair-portrait.webp"
-                alt={`Portrait of ${site.name}, ${site.role}`}
+                alt={`Portrait of ${hero.name}, ${hero.role}`}
                 width={640}
                 height={480}
                 sizes="(max-width: 1024px) 100vw, 34rem"
@@ -34,14 +41,14 @@ export function About({ about }: { about: AboutData }) {
               <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
                 <div>
                   <p className="text-lg font-semibold text-white drop-shadow">
-                    {site.name}
+                    {hero.name}
                   </p>
                   <p className="text-sm text-white/80 drop-shadow">
-                    {site.role}
+                    {hero.role}
                   </p>
                 </div>
                 <span className="glass rounded-full px-3 py-1.5 text-xs font-medium text-white">
-                  {site.location}
+                  {hero.location}
                 </span>
               </div>
             </div>
@@ -58,7 +65,7 @@ export function About({ about }: { about: AboutData }) {
           </div>
 
           <Reveal delay={0.1}>
-            <Button href={site.resumeUrl} variant="secondary" size="md">
+            <Button href={resumeUrl} variant="secondary" size="md">
               Download résumé
               <ArrowUpRight className="size-4" />
             </Button>

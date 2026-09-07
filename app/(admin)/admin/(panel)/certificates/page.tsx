@@ -9,7 +9,7 @@ const fields: FieldConfig[] = [
   { name: "title", label: "Title", type: "text" },
   { name: "organization", label: "Organization", type: "text" },
   { name: "date", label: "Date", type: "text", placeholder: "2024" },
-  { name: "icon", label: "Icon", type: "text", hint: "Lucide icon (e.g. BadgeCheck)" },
+  { name: "icon", label: "Icon", type: "icon", defaultValue: "BadgeCheck" },
   { name: "credentialUrl", label: "Credential URL", type: "text", placeholder: "https://…" },
   { name: "image", label: "Certificate image", type: "image", folder: "portfolio/certificates" },
 ];

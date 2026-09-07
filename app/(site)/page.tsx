@@ -1,4 +1,3 @@
-import { site } from "@/content/site";
 import {
   getProjects,
   getHero,
@@ -9,7 +8,11 @@ import {
   getServices,
   getCertificates,
   getTestimonials,
+  getSocialLinks,
+  type HeroData,
+  type SocialLinkData,
 } from "@/lib/data";
+import { getSiteUrl } from "@/lib/site-url";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Skills } from "@/components/sections/Skills";
@@ -23,26 +26,38 @@ import { Blog } from "@/components/sections/Blog";
 import { Contact } from "@/components/sections/Contact";
 import { SectionDivider } from "@/components/ui/SectionDivider";
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: site.name,
-  jobTitle: site.role,
-  url: site.url,
-  email: site.email,
-  image: `${site.url}/jubair-portrait.jpg`,
-  description: site.subheadline,
-  sameAs: [site.socials.github, site.socials.linkedin],
-  knowsAbout: [
-    "React",
-    "Next.js",
-    "TypeScript",
-    "C#",
-    ".NET",
-    "Node.js",
-    "Web Development",
-  ],
-};
+/**
+ * Structured data has to agree with the canonical/OG URLs, so it is built from
+ * the same DB-backed origin instead of a hardcoded domain.
+ */
+function buildPersonJsonLd(
+  hero: HeroData,
+  socials: SocialLinkData[],
+  siteUrl: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: hero.name,
+    jobTitle: hero.role,
+    url: siteUrl,
+    email: hero.email,
+    image: new URL(hero.heroImage, `${siteUrl}/`).href,
+    description: hero.subheadline,
+    sameAs: socials
+      .map((s) => s.url)
+      .filter((url) => /^https?:\/\//i.test(url)),
+    knowsAbout: [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "C#",
+      ".NET",
+      "Node.js",
+      "Web Development",
+    ],
+  };
+}
 
 // Revalidate periodically; admin mutations also call revalidatePath("/") for
 // near-instant updates after a content change.
@@ -59,6 +74,8 @@ export default async function Home() {
     services,
     certificates,
     testimonials,
+    socials,
+    siteUrl,
   ] = await Promise.all([
     getProjects(),
     getHero(),
@@ -69,7 +86,11 @@ export default async function Home() {
     getServices(),
     getCertificates(),
     getTestimonials(),
+    getSocialLinks(),
+    getSiteUrl(),
   ]);
+
+  const jsonLd = buildPersonJsonLd(hero, socials, siteUrl);
 
   return (
     <>

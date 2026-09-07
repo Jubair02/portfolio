@@ -11,7 +11,12 @@ export async function updateSiteSettings(
 ): Promise<ActionResult> {
   await requireAdmin();
   const parsed = siteSettingsSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success) {
+    // SettingsForm surfaces this via a toast and has no per-field errors, so
+    // pass the real validation message through instead of a generic one.
+    const issue = parsed.error.issues[0];
+    return { ok: false, error: issue?.message ?? "Please fix the highlighted fields." };
+  }
   const v = parsed.data;
   const data = {
     logo: v.logo || null,

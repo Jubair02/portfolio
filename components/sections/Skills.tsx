@@ -31,6 +31,7 @@ function SkillBar({ name, level }: { name: string; level: number }) {
 }
 
 export function Skills({ categories }: { categories: SkillCategoryData[] }) {
+  if (categories.length === 0) return null;
   return (
     <Section id="skills" className="border-t border-[color:var(--border)]">
       <SectionHeading

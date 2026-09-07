@@ -4,6 +4,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 
 export function Services({ services }: { services: ServiceData[] }) {
+  if (services.length === 0) return null;
   return (
     <Section id="services" className="border-t border-[color:var(--border)]">
       <SectionHeading

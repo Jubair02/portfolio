@@ -3,6 +3,7 @@ import {
   Wrench,
   BadgeCheck,
   Briefcase,
+  GraduationCap,
   Mail,
   MessageSquareQuote,
   Server,
@@ -41,6 +42,7 @@ export default async function DashboardPage() {
     { label: "Skills", count: stats.skills },
     { label: "Certificates", count: stats.certificates },
     { label: "Experience", count: stats.experience },
+    { label: "Education", count: stats.education },
     { label: "Services", count: stats.services },
     { label: "Testimonials", count: stats.testimonials },
   ];
@@ -68,21 +70,23 @@ export default async function DashboardPage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Total Projects" value={stats.projects} icon={FolderKanban} href="/admin/projects" />
-        <StatCard label="Total Skills" value={stats.skills} icon={Wrench} accent="accent" />
-        <StatCard label="Certificates" value={stats.certificates} icon={BadgeCheck} accent="gold" />
-        <StatCard label="Experience" value={stats.experience} icon={Briefcase} accent="primary" />
-        <StatCard label="Services" value={stats.services} icon={Server} accent="accent" />
-        <StatCard label="Testimonials" value={stats.testimonials} icon={MessageSquareQuote} accent="gold" />
+        <StatCard label="Total Skills" value={stats.skills} icon={Wrench} accent="accent" href="/admin/skills" />
+        <StatCard label="Certificates" value={stats.certificates} icon={BadgeCheck} accent="gold" href="/admin/certificates" />
+        <StatCard label="Experience" value={stats.experience} icon={Briefcase} accent="primary" href="/admin/experience" />
+        <StatCard label="Education" value={stats.education} icon={GraduationCap} accent="accent" href="/admin/education" />
+        <StatCard label="Services" value={stats.services} icon={Server} accent="gold" href="/admin/services" />
+        <StatCard label="Testimonials" value={stats.testimonials} icon={MessageSquareQuote} accent="primary" href="/admin/testimonials" />
         <StatCard
           label="Messages"
           value={stats.messages}
           icon={Mail}
-          accent="primary"
+          accent="accent"
+          href="/admin/messages"
           hint={stats.unreadMessages ? `${stats.unreadMessages} unread` : undefined}
         />
-        <StatCard label="Media Files" value={stats.media} icon={Images} accent="accent" />
+        <StatCard label="Media Files" value={stats.media} icon={Images} accent="gold" href="/admin/media" />
       </div>
 
       {/* Chart + activity */}

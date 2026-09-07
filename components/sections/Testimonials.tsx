@@ -1,13 +1,51 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Pause, Play, Quote } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, Quote, Star } from "lucide-react";
 import type { TestimonialData } from "@/lib/data";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { cn } from "@/lib/utils";
 
 const ease = [0.22, 1, 0.36, 1] as const;
+
+/**
+ * Direction-aware slide. These have to be variants rather than inline props:
+ * AnimatePresence only forwards its `custom` value to variant resolvers, so an
+ * inline `exit={{ x: dir ... }}` would exit using whatever direction was
+ * current when that slide first mounted.
+ */
+const slide = {
+  enter: (dir: number) => ({ opacity: 0, x: dir >= 0 ? 40 : -40 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir >= 0 ? -40 : 40 }),
+};
+
+/** Five stars with `rating` filled, announced once for screen readers. */
+function Rating({ rating }: { rating: number }) {
+  const filled = Math.max(0, Math.min(5, Math.round(rating)));
+  return (
+    <div
+      className="mt-5 flex items-center gap-1"
+      role="img"
+      aria-label={`Rated ${filled} out of 5`}
+    >
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          key={i}
+          aria-hidden="true"
+          className={cn(
+            "size-4",
+            i < filled
+              ? "fill-[color:var(--gold)] text-[color:var(--gold)]"
+              : "text-[color:var(--muted-foreground)]/35"
+          )}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function Testimonials({ testimonials }: { testimonials: TestimonialData[] }) {
   const reduce = useReducedMotion();
@@ -55,22 +93,39 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
         <div className="glass-strong shadow-glow relative overflow-hidden rounded-4xl p-8 sm:p-12">
           <Quote className="absolute right-8 top-8 size-16 text-primary/10" />
           <div className="relative min-h-[13rem] sm:min-h-[11rem]">
-            <AnimatePresence mode="wait" custom={dir}>
+            {/* popLayout, not "wait": the outgoing quote leaves the layout flow
+                and the incoming one mounts immediately, so the slides cross
+                over. With mode="wait" the card sat blank for the full 0.45s
+                exit before the next quote appeared. */}
+            <AnimatePresence mode="popLayout" custom={dir} initial={false}>
               <motion.blockquote
                 key={index}
                 custom={dir}
-                initial={{ opacity: 0, x: dir >= 0 ? 40 : -40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: dir >= 0 ? -40 : 40 }}
+                variants={slide}
+                initial="enter"
+                animate="center"
+                exit="exit"
                 transition={{ duration: 0.45, ease }}
+                className="w-full"
               >
-                <p className="text-lg font-medium leading-relaxed text-foreground/90 sm:text-xl">
+                {active.rating > 0 && <Rating rating={active.rating} />}
+                <p className="mt-4 text-lg font-medium leading-relaxed text-foreground/90 sm:text-xl">
                   “{active.review}”
                 </p>
                 <footer className="mt-7 flex items-center gap-4">
-                  <span className="grid size-12 place-items-center rounded-full bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground">
-                    {active.initials || active.name.charAt(0)}
-                  </span>
+                  {active.image ? (
+                    <Image
+                      src={active.image}
+                      alt={active.name}
+                      width={48}
+                      height={48}
+                      className="size-12 shrink-0 rounded-full object-cover ring-2 ring-[color:var(--primary)]/25"
+                    />
+                  ) : (
+                    <span className="grid size-12 shrink-0 place-items-center rounded-full bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground">
+                      {active.initials || active.name.charAt(0)}
+                    </span>
+                  )}
                   <div>
                     <div className="font-semibold">{active.name}</div>
                     <div className="text-sm text-muted-foreground">

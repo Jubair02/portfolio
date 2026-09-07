@@ -3,8 +3,8 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadBuffer, deleteAsset } from "@/lib/cloudinary";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/svg+xml"];
 
 export type UploadState = { url?: string; publicId?: string; error?: string };
@@ -17,7 +17,8 @@ export async function uploadImageAction(formData: FormData): Promise<UploadState
   const file = formData.get("file");
   if (!(file instanceof File)) return { error: "No file provided." };
   if (!ALLOWED.includes(file.type)) return { error: "Unsupported file type." };
-  if (file.size > MAX_BYTES) return { error: "File is larger than 8 MB." };
+  if (file.size > MAX_UPLOAD_BYTES)
+    return { error: `File is larger than ${MAX_UPLOAD_LABEL}.` };
 
   try {
     const folder = (formData.get("folder") as string) || "portfolio";

@@ -18,6 +18,7 @@ export async function updateHero(values: HeroFormValues): Promise<ActionResult> 
     initials: v.initials,
     role: v.role,
     roles: v.roles,
+    headline: v.headline,
     subheadline: v.subheadline,
     location: v.location,
     availabilityOpen: v.availabilityOpen,

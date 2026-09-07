@@ -65,12 +65,20 @@ export function HeroForm({ initial }: { initial: HeroFormValues }) {
                 <Input id="role" {...register("role")} />
               </Field>
             </div>
-            <Field label="Rotating roles" hint="Words that cycle in the headline.">
+            <Field label="Rotating roles" hint="Words that cycle in the headline." error={errors.roles?.message}>
               <Controller
                 control={control}
                 name="roles"
                 render={({ field }) => <TagsInput value={field.value} onChange={field.onChange} />}
               />
+            </Field>
+            <Field
+              label="Headline"
+              htmlFor="headline"
+              error={errors.headline?.message}
+              hint="The big line in the hero. Wrap words in **double asterisks** to paint them with the brand gradient."
+            >
+              <Textarea id="headline" rows={2} {...register("headline")} />
             </Field>
             <Field label="Subtitle / description" htmlFor="subheadline" error={errors.subheadline?.message}>
               <Textarea id="subheadline" rows={3} {...register("subheadline")} />
@@ -161,7 +169,10 @@ export function HeroForm({ initial }: { initial: HeroFormValues }) {
               </span>
             )}
             <p className="text-sm text-muted-foreground">Hi, I&apos;m {preview.name}</p>
-            <p className="text-lg font-semibold">{preview.role}</p>
+            <p className="text-lg font-semibold">
+              {(preview.headline ?? "").replace(/\*\*/g, "")}
+            </p>
+            <p className="text-sm font-medium text-muted-foreground">{preview.role}</p>
             <p className="text-sm text-muted-foreground">{preview.subheadline}</p>
             <div className="flex gap-2 pt-2">
               <span className="rounded-full bg-primary px-3 py-1 text-xs text-primary-foreground">

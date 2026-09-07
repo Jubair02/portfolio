@@ -6,6 +6,7 @@ import { UploadCloud, Copy, Trash2, Search, Loader2, Check } from "lucide-react"
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { uploadImageAction, deleteImageAction } from "@/lib/actions/upload";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Input } from "@/components/admin/ui/input";
 import { Button } from "@/components/admin/ui/button";
 import { Card, CardContent } from "@/components/admin/ui/card";
@@ -35,8 +36,8 @@ export function MediaLibrary({ assets }: { assets: Asset[] }) {
   );
 
   function upload(file: File) {
-    if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image is larger than 8 MB. Please choose a smaller file.");
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast.error(`Image is larger than ${MAX_UPLOAD_LABEL}. Please choose a smaller file.`);
       return;
     }
     const fd = new FormData();

@@ -11,7 +11,7 @@ editable from an admin dashboard. This document covers setup and current status.
 - **Cloudinary** for image uploads
 - **React Hook Form + Zod** for forms
 - shadcn-style UI primitives (`components/admin/ui/`), **sonner** toasts,
-  **recharts** charts, **@dnd-kit** (drag-and-drop, later phases)
+  **recharts** charts, **@dnd-kit** (drag-and-drop)
 
 ## 1. Environment variables
 
@@ -26,7 +26,8 @@ Copy `.env.example` → `.env` and fill in:
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | same cloud name, exposed to the client |
 | `RESEND_API_KEY` (optional) | contact-form email delivery |
 
-`.env` is gitignored — never commit it.
+`.env` is gitignored — never commit it. Prisma CLI settings (schema path, seed
+command) live in `prisma.config.ts`, which loads `.env` via `dotenv`.
 
 ## 2. Database setup
 
@@ -39,7 +40,6 @@ Useful commands:
 
 ```bash
 npm run db:studio      # visual DB browser
-npm run db:push        # push schema without a migration (quick prototyping)
 npm run db:reset       # DROP + recreate + reseed (destructive)
 ```
 
@@ -70,7 +70,7 @@ Add these for **Production** (and Preview, if used):
 | `AUTH_TRUST_HOST` | `true` |
 | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | Image uploads. |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Same cloud name (client-exposed). |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Only needed if you run `db:seed` against prod. |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` | Only used to create the **first** admin user on an empty database. |
 | `RESEND_API_KEY`, `CONTACT_TO_EMAIL`, `CONTACT_FROM_EMAIL` | Optional email delivery. |
 
 ### 2. Build & install commands
@@ -89,6 +89,13 @@ No Vercel overrides needed — the defaults pick these up from `package.json`:
 4. Seed the initial content/admin **once** against the prod DB (from your
    machine with the prod `DATABASE_URL`/`DIRECT_URL` in `.env`, or a one-off):
    `npm run db:seed`.
+
+> **`db:seed` is a one-off bootstrap, not a maintenance command.** Re-running it
+> against a live database **wipes and rewrites** every content collection and
+> singleton, discarding anything edited in the admin panel. It will *not* touch
+> user accounts: admin creation is skipped whenever any user already exists, so
+> it can no longer add a second admin with the password from `.env`. Change the
+> admin password from **Profile**, not by editing `.env` and re-seeding.
 
 ### 4. Making schema changes going forward
 
@@ -119,10 +126,12 @@ npm run db:migrate -- --name add_something
   - `app/(admin)/` — the admin panel (its own minimal layout, no public chrome)
 - **Auth**: `auth.config.ts` (edge-safe) + `auth.ts` (Node, Prisma+bcrypt).
   `middleware.ts` protects `/admin/*`.
-- **Data layer**: `lib/data.ts` reads from the DB and **falls back to
-  `content/site.ts`** if the DB is unreachable or empty, so the site always
-  renders. Once seeded, DB data wins. Mutations call `revalidatePath("/")` so
-  the public site updates near-instantly.
+- **Data layer**: `lib/data.ts` reads from the DB and falls back to
+  `content/site.ts` **only when the query throws** (DB unreachable / not
+  migrated). An empty table is a legitimate state, not a failure: deleting every
+  row in a module empties that module and the matching public section hides
+  itself. Mutations call `revalidatePath("/")` so the public site updates
+  near-instantly.
 - **Images**: uploaded to Cloudinary via the `uploadImageAction` server action;
   tracked in the `MediaAsset` table.
 
@@ -147,7 +156,7 @@ section reads live from the DB (with static fallback if the DB is unreachable).
 | Contact Messages | search / filter / read / reply / delete / paginate | inbound from contact form |
 | Social Links | CRUD + visibility | ✅ (footer) |
 | SEO Settings | title / description / keywords / OG / favicon | ✅ (`generateMetadata`) |
-| Site Settings | footer / copyright / résumé / colors / siteUrl | ✅ (footer + metadataBase) |
+| Site Settings | footer / copyright / résumé / colors / siteUrl (validated as an absolute `http(s)` URL) | ✅ (footer + metadataBase) |
 | Media Library | upload / preview / copy URL / delete / search | Cloudinary |
 | Profile | name / email / picture + change password | — |
 

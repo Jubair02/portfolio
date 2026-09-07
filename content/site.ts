@@ -28,7 +28,9 @@ export const site = {
   },
   email: "jubu01754@gmail.com",
   resumeUrl: "/Resume.pdf",
-  url: "https://jubairhossain.dev", // PLACEHOLDER — set to your deployed domain
+  // Deployed origin. Admin → Settings → "Site URL" overrides this at runtime;
+  // this value is the fallback used when the DB is empty or unreachable.
+  url: "https://jhossain.vercel.app",
   socials: {
     github: "https://github.com/Jubair02",
     linkedin: "https://www.linkedin.com/in/jubair-hossain-dev/",
@@ -471,34 +473,24 @@ export const achievements = [
 ] as const;
 
 /* -------------------------------------------------------------------------- */
-/* Testimonials — PLACEHOLDER: replace with real quotes & attributions         */
+/* Testimonials — real quotes only.                                           */
+/*                                                                            */
+/* Intentionally empty. The three "Sample Client" / "Peer Reviewer" /          */
+/* "Project Lead" placeholders that used to live here were seeded into the DB  */
+/* and shown publicly as if they were genuine. Add real, attributable quotes   */
+/* through the admin panel (Testimonials) — this array is only the offline     */
+/* fallback used when the database is unreachable, and fabricated praise must  */
+/* never be what a visitor sees.                                              */
 /* -------------------------------------------------------------------------- */
-export const testimonials = [
-  {
-    quote:
-      "Jubair has a rare eye for detail. He took our rough concept and shipped a polished, responsive app faster than we expected — and it just works.",
-    name: "Sample Client",
-    title: "Product Owner",
-    company: "Startup",
-    initials: "SC",
-  },
-  {
-    quote:
-      "Reliable, communicative, and genuinely cares about quality. The front-end he built is clean, accessible, and blazing fast on mobile.",
-    name: "Peer Reviewer",
-    title: "Senior Engineer",
-    company: "Collaboration",
-    initials: "PR",
-  },
-  {
-    quote:
-      "Great problem solver. He balances speed with craftsmanship and leaves the codebase better than he found it.",
-    name: "Project Lead",
-    title: "Engineering Lead",
-    company: "Open Source",
-    initials: "PL",
-  },
-] as const;
+export type Testimonial = {
+  quote: string;
+  name: string;
+  title: string;
+  company: string;
+  initials: string;
+};
+
+export const testimonials: Testimonial[] = [];
 
 /* -------------------------------------------------------------------------- */
 /* GitHub — real figures from the public profile                              */
@@ -526,37 +518,34 @@ export const github = {
 } as const;
 
 /* -------------------------------------------------------------------------- */
-/* Blog / insights — PLACEHOLDER: link to your real articles                   */
+/* Blog / insights                                                            */
 /* -------------------------------------------------------------------------- */
-export const posts = [
-  {
-    title: "Building accessible React components from scratch",
-    excerpt:
-      "A practical walkthrough of ARIA, focus management, and keyboard patterns that make components usable for everyone.",
-    date: "2026-05-12",
-    readingTime: "6 min read",
-    tag: "React",
-    href: "#",
-  },
-  {
-    title: "From C# to full-stack: lessons from shipping real projects",
-    excerpt:
-      "What building both .NET APIs and React front-ends taught me about designing clean contracts between them.",
-    date: "2026-03-02",
-    readingTime: "8 min read",
-    tag: "Full-Stack",
-    href: "#",
-  },
-  {
-    title: "Optimizing Next.js for Core Web Vitals",
-    excerpt:
-      "The image, font, and rendering strategies I reach for to keep Lighthouse scores in the green.",
-    date: "2026-01-18",
-    readingTime: "5 min read",
-    tag: "Performance",
-    href: "#",
-  },
-] as const;
+export type Post = {
+  title: string;
+  excerpt: string;
+  /** ISO date, e.g. "2026-05-12" */
+  date: string;
+  readingTime: string;
+  tag: string;
+  /** Must be a real URL — entries without one are not rendered. */
+  href: string;
+};
+
+/**
+ * Real articles only. The Writing section hides itself while this is empty, so
+ * add an entry here (dev.to, Medium, Hashnode, your own post — any real URL)
+ * and the section appears automatically:
+ *
+ *   {
+ *     title: "Optimizing Next.js for Core Web Vitals",
+ *     excerpt: "The image, font, and rendering strategies I reach for.",
+ *     date: "2026-01-18",
+ *     readingTime: "5 min read",
+ *     tag: "Performance",
+ *     href: "https://dev.to/jubair02/optimizing-nextjs",
+ *   },
+ */
+export const posts: Post[] = [];
 
 /* -------------------------------------------------------------------------- */
 /* Contact                                                                    */

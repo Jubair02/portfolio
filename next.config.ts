@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { SERVER_ACTION_BODY_LIMIT } from "./lib/upload-limits";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -27,8 +28,9 @@ const nextConfig: NextConfig = {
     // Import only the icons/animations actually used, shrinking the bundle.
     optimizePackageImports: ["lucide-react", "framer-motion"],
     // Allow image uploads through Server Actions (default cap is 1 MB).
+    // Kept in step with the upload limit the UI and the action enforce.
     serverActions: {
-      bodySizeLimit: "5mb",
+      bodySizeLimit: SERVER_ACTION_BODY_LIMIT,
     },
   },
   async headers() {

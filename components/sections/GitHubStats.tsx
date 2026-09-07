@@ -44,9 +44,11 @@ export function GitHubStats() {
         ))}
       </RevealGroup>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+      {/* minmax(0,…) tracks + min-w-0 items keep the wide contribution chart
+          from forcing the columns past the viewport on small screens. */}
+      <div className="mt-6 grid gap-6 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         {/* Languages */}
-        <Reveal>
+        <Reveal className="min-w-0">
           <div className="surface h-full rounded-3xl p-7">
             <h3 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Most used languages
@@ -78,8 +80,8 @@ export function GitHubStats() {
         </Reveal>
 
         {/* Contribution graph */}
-        <Reveal direction="left">
-          <div className="surface h-full rounded-3xl p-7">
+        <Reveal direction="left" className="min-w-0">
+          <div className="surface h-full min-w-0 rounded-3xl p-7">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 Contribution activity

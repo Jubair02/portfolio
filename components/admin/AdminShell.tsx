@@ -18,7 +18,7 @@ export function AdminShell({
     <div className="min-h-screen lg:pl-64">
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-border bg-card lg:block">
-        <Sidebar />
+        <Sidebar user={user} />
       </aside>
 
       {/* Mobile drawer */}
@@ -30,7 +30,7 @@ export function AdminShell({
             aria-hidden
           />
           <aside className="absolute inset-y-0 left-0 w-64 border-r border-border bg-card">
-            <Sidebar onNavigate={() => setOpen(false)} />
+            <Sidebar user={user} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}

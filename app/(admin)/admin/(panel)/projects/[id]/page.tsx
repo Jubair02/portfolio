@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { ProjectForm } from "@/components/admin/projects/ProjectForm";
 import type { ProjectFormValues } from "@/lib/schemas/project";
+import { isIconName } from "@/lib/icon-names";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +33,7 @@ export default async function EditProjectPage({
     featured: p.featured,
     status: p.status as "DRAFT" | "PUBLISHED",
     gradient: p.gradient ?? "",
-    icon: p.icon,
+    icon: isIconName(p.icon) ? p.icon : "Sparkles",
     image: p.image ?? "",
     screenshots: p.screenshots,
     githubUrl: p.githubUrl ?? "",

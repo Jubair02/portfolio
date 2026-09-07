@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const fields: FieldConfig[] = [
   { name: "title", label: "Title", type: "text" },
-  { name: "icon", label: "Icon", type: "text", hint: "Lucide icon (e.g. Server, Palette)" },
+  { name: "icon", label: "Icon", type: "icon", defaultValue: "Server" },
   { name: "description", label: "Description", type: "textarea" },
   { name: "features", label: "Features", type: "tags", hint: "Press Enter after each." },
 ];

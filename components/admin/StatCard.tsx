@@ -37,5 +37,11 @@ export function StatCard({
     </Card>
   );
 
-  return href ? <Link href={href}>{inner}</Link> : inner;
+  return href ? (
+    <Link href={href} className="block rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  );
 }

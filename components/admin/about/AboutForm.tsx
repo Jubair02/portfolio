@@ -13,6 +13,7 @@ import { Input } from "@/components/admin/ui/input";
 import { Textarea } from "@/components/admin/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/card";
 import { Field } from "@/components/admin/Field";
+import { IconPicker } from "@/components/admin/IconPicker";
 
 export function AboutForm({ initial }: { initial: AboutFormValues }) {
   const router = useRouter();
@@ -123,8 +124,11 @@ export function AboutForm({ initial }: { initial: AboutFormValues }) {
                 </Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Icon" hint="Lucide icon name (e.g. Gauge, Rocket).">
-                  <Input {...register(`values.${i}.icon`)} />
+                <Field label="Icon">
+                  <IconPicker
+                    value={values[i]?.icon ?? ""}
+                    onChange={(v) => setValue(`values.${i}.icon`, v, { shouldDirty: true })}
+                  />
                 </Field>
                 <Field label="Title">
                   <Input {...register(`values.${i}.title`)} />

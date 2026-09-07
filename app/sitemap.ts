@@ -1,10 +1,13 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/content/site";
+import { getSiteUrl } from "@/lib/site-url";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const url = await getSiteUrl();
   return [
     {
-      url: site.url,
+      url,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 1,
