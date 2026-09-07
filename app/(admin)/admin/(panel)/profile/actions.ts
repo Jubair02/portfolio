@@ -5,7 +5,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { unstable_update } from "@/auth";
-import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
+import { getAdmin, sessionExpiredResult, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Name is required."),
@@ -19,9 +20,15 @@ const passwordSchema = z.object({
 });
 
 export async function updateProfile(values: Record<string, unknown>): Promise<ActionResult> {
-  const admin = await requireAdmin();
+  const admin = await getAdmin();
+  if (!admin) return sessionExpiredResult();
   const parsed = profileSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   const { name, email, image } = parsed.data;
   try {
     const clash = await prisma.user.findFirst({ where: { email, NOT: { id: admin.id } } });
@@ -41,7 +48,8 @@ export async function updateProfile(values: Record<string, unknown>): Promise<Ac
 }
 
 export async function changePassword(values: Record<string, unknown>): Promise<ActionResult> {
-  const admin = await requireAdmin();
+  const admin = await getAdmin();
+  if (!admin) return sessionExpiredResult();
   const parsed = passwordSchema.safeParse(values);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input." };

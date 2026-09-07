@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { aboutSchema, type AboutFormValues } from "@/lib/schemas/about";
 import { updateAbout } from "@/app/(admin)/admin/(panel)/about/actions";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Textarea } from "@/components/admin/ui/textarea";
@@ -31,12 +32,12 @@ export function AboutForm({ initial }: { initial: AboutFormValues }) {
 
   function onSubmit(data: AboutFormValues) {
     start(async () => {
-      const res = await updateAbout(data);
+      const res = await runAction(() => updateAbout(data));
       if (res.ok) {
         toast.success("About section saved.");
         router.refresh();
       } else {
-        toast.error(res.error ?? "Something went wrong.");
+        toastActionError(res);
       }
     });
   }

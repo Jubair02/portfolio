@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { changePassword } from "@/app/(admin)/admin/(panel)/profile/actions";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/card";
@@ -21,14 +22,16 @@ export function ChangePassword() {
       return;
     }
     start(async () => {
-      const res = await changePassword({ currentPassword: current, newPassword: next });
+      const res = await runAction(() =>
+        changePassword({ currentPassword: current, newPassword: next })
+      );
       if (res.ok) {
         toast.success("Password changed.");
         setCurrent("");
         setNext("");
         setConfirm("");
       } else {
-        toast.error(res.error ?? "Something went wrong.");
+        toastActionError(res);
       }
     });
   }

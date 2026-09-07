@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Pencil, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import {
   upsertCategory,
   deleteCategory,
@@ -92,7 +93,7 @@ export function SkillsManager({ categories }: { categories: Category[] }) {
                   title={`Delete "${cat.title}"?`}
                   description="This removes the category and all its skills."
                   onConfirm={async () => {
-                    const res = await deleteCategory(cat.id);
+                    const res = await runAction(() => deleteCategory(cat.id));
                     if (res.ok) router.refresh();
                     return res;
                   }}
@@ -120,9 +121,9 @@ export function SkillsManager({ categories }: { categories: Category[] }) {
                 }}
                 onEdit={(s) => setSkillDialog({ open: true, categoryId: cat.id, editing: s })}
                 onDelete={async (id) => {
-                  const res = await deleteSkill(id);
+                  const res = await runAction(() => deleteSkill(id));
                   if (res.ok) router.refresh();
-                  else toast.error(res.error ?? "Failed.");
+                  else toastActionError(res);
                 }}
               />
               <Button
@@ -247,11 +248,13 @@ function CategoryDialog({
 
   function save() {
     start(async () => {
-      const res = await upsertCategory(editing?.id ?? null, { icon, title, blurb });
+      const res = await runAction(() =>
+        upsertCategory(editing?.id ?? null, { icon, title, blurb })
+      );
       if (res.ok) {
         toast.success("Saved.");
         onSaved();
-      } else toast.error(res.error ?? "Failed.");
+      } else toastActionError(res);
     });
   }
 
@@ -300,11 +303,13 @@ function SkillDialog({
 
   function save() {
     start(async () => {
-      const res = await upsertSkill(categoryId, editing?.id ?? null, { name, level });
+      const res = await runAction(() =>
+        upsertSkill(categoryId, editing?.id ?? null, { name, level })
+      );
       if (res.ok) {
         toast.success("Saved.");
         onSaved();
-      } else toast.error(res.error ?? "Failed.");
+      } else toastActionError(res);
     });
   }
 

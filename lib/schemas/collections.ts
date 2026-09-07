@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { iconNameSchema, optionalIconNameSchema } from "@/lib/schemas/icon";
+import { contactUrlSchema, optionalHttpUrlSchema } from "@/lib/schemas/url";
 
 export const certificateSchema = z.object({
   title: z.string().min(1, "Title is required."),
   organization: z.string().min(1, "Organization is required."),
   date: z.string().min(1, "Date is required."),
   image: z.string().optional(),
-  credentialUrl: z.string().optional(),
+  credentialUrl: optionalHttpUrlSchema,
   icon: iconNameSchema,
 });
 export type CertificateFormValues = z.infer<typeof certificateSchema>;
@@ -32,7 +33,7 @@ export type TestimonialFormValues = z.infer<typeof testimonialSchema>;
 
 export const socialSchema = z.object({
   platform: z.string().min(1, "Platform is required."),
-  url: z.string().min(1, "URL is required."),
+  url: contactUrlSchema,
   icon: optionalIconNameSchema.optional(),
   visible: z.boolean(),
 });

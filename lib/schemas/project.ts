@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { iconNameSchema } from "@/lib/schemas/icon";
+import { optionalHttpUrlSchema } from "@/lib/schemas/url";
 
 export const projectSchema = z.object({
   title: z.string().min(1, "Title is required."),
@@ -25,8 +26,8 @@ export const projectSchema = z.object({
   icon: iconNameSchema,
   image: z.string().optional(),
   screenshots: z.array(z.string()),
-  githubUrl: z.string().optional(),
-  liveUrl: z.string().optional(),
+  githubUrl: optionalHttpUrlSchema,
+  liveUrl: optionalHttpUrlSchema,
   order: z.number().int(),
 });
 

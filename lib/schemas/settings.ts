@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { httpUrlSchema } from "@/lib/schemas/url";
 
 export const seoSchema = z.object({
   siteTitle: z.string().min(1, "Site title is required."),
@@ -9,19 +10,6 @@ export const seoSchema = z.object({
 });
 export type SeoFormValues = z.infer<typeof seoSchema>;
 
-/**
- * The site URL is fed to `new URL()` in `app/(site)/layout.tsx` (metadataBase),
- * so an unparseable value would throw on every public request. Require a full
- * absolute http(s) URL; empty means "use the default from content/site.ts".
- */
-const absoluteUrl = z
-  .string()
-  .url("Enter a full URL including https:// — e.g. https://jhossain.vercel.app")
-  .refine(
-    (v) => /^https?:\/\//i.test(v),
-    "Site URL must start with http:// or https://"
-  );
-
 export const siteSettingsSchema = z.object({
   logo: z.string().optional(),
   footerText: z.string().optional(),
@@ -29,6 +17,10 @@ export const siteSettingsSchema = z.object({
   resumeUrl: z.string().optional(),
   primaryColor: z.string().optional(),
   accentColor: z.string().optional(),
-  siteUrl: z.union([z.literal(""), absoluteUrl]).optional(),
+  /**
+   * Drives metadataBase, canonical, OG and sitemap URLs, so it must parse.
+   * Empty means "fall back to NEXT_PUBLIC_SITE_URL / content/site.ts".
+   */
+  siteUrl: z.union([z.literal(""), httpUrlSchema]).optional(),
 });
 export type SiteSettingsFormValues = z.infer<typeof siteSettingsSchema>;

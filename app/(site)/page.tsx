@@ -98,8 +98,8 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Hero hero={hero} />
-      <About about={about} />
+      <Hero hero={hero} socials={socials} />
+      <About about={about} hero={hero} resumeUrl={hero.resumeUrl} />
       <Skills categories={skills} />
       <Projects projects={projects} />
       <Experience experience={experience} education={education} />
@@ -109,7 +109,7 @@ export default async function Home() {
       <SectionDivider />
       <GitHubStats />
       <Blog />
-      <Contact />
+      <Contact hero={hero} socials={socials} />
     </>
   );
 }

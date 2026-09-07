@@ -2,14 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
+import { adminGuard, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 import { logActivity } from "@/lib/activity";
 import { heroSchema, type HeroFormValues } from "@/lib/schemas/hero";
 
 export async function updateHero(values: HeroFormValues): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = heroSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
 
   const v = parsed.data;
   const data = {

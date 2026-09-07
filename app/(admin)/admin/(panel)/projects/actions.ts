@@ -1,19 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { adminGuard, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 import { logActivity } from "@/lib/activity";
 import { projectSchema, type ProjectFormValues } from "@/lib/schemas/project";
 import { Prisma } from "@prisma/client";
-
-type ActionResult = { ok: boolean; error?: string; fieldErrors?: Record<string, string> };
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session?.user) throw new Error("Not authorized.");
-  return session.user;
-}
 
 /** "" → null for nullable columns; map form values to a Prisma payload. */
 function toData(v: ProjectFormValues): Prisma.ProjectUncheckedCreateInput {
@@ -46,9 +39,15 @@ function revalidateAll() {
 }
 
 export async function createProject(values: ProjectFormValues): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = projectSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
 
   try {
     const exists = await prisma.project.findUnique({ where: { slug: parsed.data.slug } });
@@ -68,9 +67,15 @@ export async function updateProject(
   id: string,
   values: ProjectFormValues
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = projectSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
 
   try {
     const clash = await prisma.project.findFirst({
@@ -92,7 +97,8 @@ export async function updateProject(
 }
 
 export async function deleteProject(id: string): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     const deleted = await prisma.project.delete({ where: { id } });
     await logActivity("deleted", "project", deleted.title, id);
@@ -105,7 +111,8 @@ export async function deleteProject(id: string): Promise<ActionResult> {
 }
 
 export async function toggleFeatured(id: string, featured: boolean): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     await prisma.project.update({ where: { id }, data: { featured } });
     revalidateAll();

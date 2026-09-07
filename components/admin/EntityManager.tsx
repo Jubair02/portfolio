@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Pencil, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import type { ActionResult } from "@/lib/auth-guard";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
 import { Textarea } from "@/components/admin/ui/textarea";
@@ -74,6 +75,29 @@ function defaultFor(f: FieldConfig): unknown {
     default:
       return "";
   }
+}
+
+/** Copy of `errors` without `key`. */
+function omit(errors: Record<string, string>, key: string): Record<string, string> {
+  const next = { ...errors };
+  delete next[key];
+  return next;
+}
+
+/**
+ * Field errors render inline, but a message aimed at something this form does
+ * not draw — a nested path like "metrics.0.label", or a column only the action
+ * knows about — would otherwise be invisible. Promote the first of those into
+ * the toast so no validation failure is silent.
+ */
+function unrenderedError(
+  fieldErrors: Record<string, string>,
+  fields: FieldConfig[],
+  res: ActionResult
+): ActionResult {
+  const rendered = new Set(fields.map((f) => f.name));
+  const orphan = Object.entries(fieldErrors).find(([name]) => !rendered.has(name));
+  return orphan ? { ...res, error: orphan[1] } : res;
 }
 
 export function EntityManager({
@@ -147,7 +171,7 @@ export function EntityManager({
                   <ConfirmDialog
                     title="Delete this item?"
                     onConfirm={async () => {
-                      const res = await remove(item.id);
+                      const res = await runAction(() => remove(item.id));
                       if (res.ok) router.refresh();
                       return res;
                     }}
@@ -171,16 +195,17 @@ export function EntityManager({
         fields={fields}
         onClose={() => setDialog({ open: false })}
         onSave={async (values) => {
-          const res = dialog.editing
-            ? await update(dialog.editing.id, values)
-            : await create(values);
+          const res = await runAction(() =>
+            dialog.editing ? update(dialog.editing.id, values) : create(values)
+          );
           if (res.ok) {
             toast.success("Saved.");
             setDialog({ open: false });
             router.refresh();
-          } else {
-            toast.error(res.error ?? "Something went wrong.");
           }
+          // The dialog stays open on failure and renders res.fieldErrors
+          // beside the offending inputs, so it needs the result back.
+          return res;
         }}
       />
       )}
@@ -197,7 +222,7 @@ function EntityDialog({
   editing?: EntityItem;
   fields: FieldConfig[];
   onClose: () => void;
-  onSave: (values: Record<string, unknown>) => Promise<void>;
+  onSave: (values: Record<string, unknown>) => Promise<ActionResult>;
 }) {
   const [values, setValues] = useState<Record<string, unknown>>(() => {
     const initial: Record<string, unknown> = {};
@@ -207,8 +232,23 @@ function EntityDialog({
     return initial;
   });
   const [pending, start] = useTransition();
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const set = (name: string, v: unknown) => setValues((prev) => ({ ...prev, [name]: v }));
+  function set(name: string, v: unknown) {
+    setValues((prev) => ({ ...prev, [name]: v }));
+    // Clear the message as soon as the editor acts on it.
+    setErrors((prev) => (name in prev ? omit(prev, name) : prev));
+  }
+
+  function submit() {
+    start(async () => {
+      const res = await onSave(values);
+      if (res.ok) return;
+      const fieldErrors = res.fieldErrors ?? {};
+      setErrors(fieldErrors);
+      toastActionError(unrenderedError(fieldErrors, fields, res));
+    });
+  }
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -219,15 +259,15 @@ function EntityDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           {fields.map((f) => (
             <div key={f.name} className={cn(f.full || f.type === "textarea" || f.type === "image" || f.type === "tags" ? "sm:col-span-2" : "")}>
-              <Field label={f.label} hint={f.hint}>
+              <Field label={f.label} hint={f.hint} htmlFor={f.name} error={errors[f.name]}>
                 {f.type === "text" && (
-                  <Input value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                  <Input id={f.name} aria-invalid={Boolean(errors[f.name])} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "number" && (
-                  <Input type="number" value={Number(values[f.name] ?? 0)} onChange={(e) => set(f.name, Number(e.target.value))} />
+                  <Input id={f.name} aria-invalid={Boolean(errors[f.name])} type="number" value={Number(values[f.name] ?? 0)} onChange={(e) => set(f.name, Number(e.target.value))} />
                 )}
                 {f.type === "textarea" && (
-                  <Textarea rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                  <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "tags" && (
                   <TagsInput value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />
@@ -270,7 +310,7 @@ function EntityDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={pending}>Cancel</Button>
-          <Button onClick={() => start(() => onSave(values))} disabled={pending}>
+          <Button onClick={submit} disabled={pending}>
             {pending && <Loader2 className="size-4 animate-spin" />}Save
           </Button>
         </DialogFooter>

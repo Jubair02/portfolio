@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
+import { adminGuard, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 import { logActivity } from "@/lib/activity";
 import {
   categorySchema,
@@ -20,9 +21,15 @@ export async function upsertCategory(
   id: string | null,
   values: CategoryFormValues
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = categorySchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   const data = { icon: parsed.data.icon, title: parsed.data.title, blurb: parsed.data.blurb || null };
   try {
     if (id) {
@@ -40,7 +47,8 @@ export async function upsertCategory(
 }
 
 export async function deleteCategory(id: string): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     await prisma.skillCategory.delete({ where: { id } });
     await logActivity("deleted", "skill category");
@@ -56,9 +64,15 @@ export async function upsertSkill(
   id: string | null,
   values: SkillFormValues
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = skillSchema.safeParse(values);
-  if (!parsed.success) return { ok: false, error: "Please fix the fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   try {
     if (id) {
       await prisma.skill.update({
@@ -79,7 +93,8 @@ export async function upsertSkill(
 }
 
 export async function deleteSkill(id: string): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     await prisma.skill.delete({ where: { id } });
     revalidate();
@@ -90,7 +105,8 @@ export async function deleteSkill(id: string): Promise<ActionResult> {
 }
 
 export async function reorderSkills(ids: string[]): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     await prisma.$transaction(
       ids.map((id, i) => prisma.skill.update({ where: { id }, data: { order: i } }))

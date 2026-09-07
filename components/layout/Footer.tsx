@@ -1,5 +1,6 @@
+import Image from "next/image";
 import { nav, site } from "@/content/site";
-import type { SocialLinkData } from "@/lib/data";
+import type { HeroData, SocialLinkData } from "@/lib/data";
 import { DataIcon, GithubIcon, LinkedinIcon } from "@/components/icons";
 import { isIconName } from "@/lib/icon-names";
 import { Mail, Phone, Globe } from "lucide-react";
@@ -23,13 +24,18 @@ function PlatformIcon({
 }
 
 export function Footer({
+  hero,
   socials,
   footerText,
   copyright,
+  logo,
 }: {
+  hero: HeroData;
   socials: SocialLinkData[];
   footerText?: string | null;
   copyright?: string | null;
+  /** Site Settings logo — replaces the initials monogram when uploaded. */
+  logo?: string | null;
 }) {
   const year = new Date().getFullYear();
 
@@ -40,9 +46,21 @@ export function Footer({
           {/* Brand */}
           <div>
             <a href="#top" className="flex items-center gap-3">
-              <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground shadow-glow">
-                {hero.initials}
-              </span>
+              {logo ? (
+                <span className="grid size-10 place-items-center overflow-hidden rounded-xl bg-[color:var(--muted)] shadow-glow">
+                  <Image
+                    src={logo}
+                    alt={`${hero.name} logo`}
+                    width={40}
+                    height={40}
+                    className="size-full object-contain"
+                  />
+                </span>
+              ) : (
+                <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground shadow-glow">
+                  {hero.initials}
+                </span>
+              )}
               <span className="text-lg font-semibold tracking-tight">
                 {hero.name}
               </span>

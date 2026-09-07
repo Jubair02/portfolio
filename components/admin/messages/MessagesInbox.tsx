@@ -12,7 +12,7 @@ import {
   ChevronRight,
   CheckCheck,
 } from "lucide-react";
-import { toast } from "sonner";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { toggleRead, deleteMessage, markAllRead } from "@/app/(admin)/admin/(panel)/messages/actions";
 import { Input } from "@/components/admin/ui/input";
 import { Button } from "@/components/admin/ui/button";
@@ -70,9 +70,9 @@ export function MessagesInbox({
 
   function act(fn: () => Promise<{ ok: boolean; error?: string }>) {
     start(async () => {
-      const res = await fn();
+      const res = await runAction(fn);
       if (res.ok) router.refresh();
-      else toast.error(res.error ?? "Failed.");
+      else toastActionError(res);
     });
   }
 

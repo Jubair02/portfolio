@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { nav } from "@/content/site";
@@ -16,7 +17,7 @@ export function Navbar({
   brand,
   socials,
 }: {
-  brand: { name: string; initials: string };
+  brand: { name: string; initials: string; logo?: string | null };
   socials: { platform: string; url: string }[];
 }) {
   const lenis = useLenis();
@@ -130,11 +131,27 @@ export function Navbar({
         >
           <span
             className={cn(
-              "grid place-items-center rounded-xl bg-gradient-to-br from-primary to-accent-2 font-bold text-primary-foreground shadow-glow transition-all duration-300 group-hover:scale-105",
+              "grid place-items-center overflow-hidden rounded-xl font-bold text-primary-foreground shadow-glow transition-all duration-300 group-hover:scale-105",
+              // An uploaded logo replaces the initials monogram entirely, so it
+              // must not sit on the gradient tile.
+              brand.logo
+                ? "bg-[color:var(--muted)]"
+                : "bg-gradient-to-br from-primary to-accent-2",
               scrolled ? "size-8 text-xs" : "size-9 text-sm"
             )}
           >
-            {brand.initials}
+            {brand.logo ? (
+              <Image
+                src={brand.logo}
+                alt={`${brand.name} logo`}
+                width={36}
+                height={36}
+                priority
+                className="size-full object-contain"
+              />
+            ) : (
+              brand.initials
+            )}
           </span>
           <span className="hidden text-sm font-semibold tracking-tight sm:block">
             {brand.name}

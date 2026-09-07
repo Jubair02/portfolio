@@ -2,21 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
+import { adminGuard, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 import { logActivity } from "@/lib/activity";
 import { siteSettingsSchema } from "@/lib/schemas/settings";
 
 export async function updateSiteSettings(
   values: Record<string, unknown>
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = siteSettingsSchema.safeParse(values);
-  if (!parsed.success) {
-    // SettingsForm surfaces this via a toast and has no per-field errors, so
-    // pass the real validation message through instead of a generic one.
-    const issue = parsed.error.issues[0];
-    return { ok: false, error: issue?.message ?? "Please fix the highlighted fields." };
-  }
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   const v = parsed.data;
   const data = {
     logo: v.logo || null,

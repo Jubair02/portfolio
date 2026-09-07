@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "../globals.css";
 import { site } from "@/content/site";
-import { getSocialLinks, getSeo, getSiteSettings } from "@/lib/data";
+import { getSocialLinks, getSeo, getSiteSettings, getHero } from "@/lib/data";
 import { normalizeSiteUrl } from "@/lib/site-url";
 import { geistSans, geistMono } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -10,6 +10,7 @@ import { AuroraBackground } from "@/components/ui/AuroraBackground";
 import { CustomCursor } from "@/components/effects/CustomCursor";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { BrandTokens } from "@/components/layout/BrandTokens";
 import { Preloader } from "@/components/layout/Preloader";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 
@@ -78,7 +79,11 @@ export const viewport: Viewport = {
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [socials, settings] = await Promise.all([getSocialLinks(), getSiteSettings()]);
+  const [socials, settings, hero] = await Promise.all([
+    getSocialLinks(),
+    getSiteSettings(),
+    getHero(),
+  ]);
   return (
     <html
       lang="en"
@@ -86,6 +91,10 @@ export default async function SiteLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <BrandTokens
+          primaryColor={settings.primaryColor}
+          accentColor={settings.accentColor}
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -103,9 +112,22 @@ export default async function SiteLayout({
             <AuroraBackground />
             <CustomCursor />
             <ScrollProgress />
-            <Navbar />
+            <Navbar
+              brand={{
+                name: hero.name,
+                initials: hero.initials,
+                logo: settings.logo,
+              }}
+              socials={socials}
+            />
             <main id="main">{children}</main>
-            <Footer socials={socials} footerText={settings.footerText} copyright={settings.copyright} />
+            <Footer
+              hero={hero}
+              socials={socials}
+              footerText={settings.footerText}
+              copyright={settings.copyright}
+              logo={settings.logo}
+            />
           </SmoothScroll>
         </ThemeProvider>
       </body>

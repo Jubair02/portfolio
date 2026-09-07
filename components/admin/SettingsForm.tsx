@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import type { ActionResult } from "@/lib/auth-guard";
 import type { FieldConfig } from "@/components/admin/EntityManager";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Field } from "@/components/admin/Field";
 import { Input } from "@/components/admin/ui/input";
 import { Textarea } from "@/components/admin/ui/textarea";
@@ -30,17 +31,35 @@ export function SettingsForm({
   const router = useRouter();
   const [values, setValues] = useState<Record<string, unknown>>(initial);
   const [pending, start] = useTransition();
-  const set = (name: string, v: unknown) => setValues((prev) => ({ ...prev, [name]: v }));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  function set(name: string, v: unknown) {
+    setValues((prev) => ({ ...prev, [name]: v }));
+    // Clear the message as soon as the editor acts on it.
+    setErrors((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  }
 
   function save() {
     start(async () => {
-      const res = await action(values);
+      const res = await runAction(() => action(values));
       if (res.ok) {
+        setErrors({});
         toast.success("Saved.");
         router.refresh();
-      } else {
-        toast.error(res.error ?? "Something went wrong.");
+        return;
       }
+      const fieldErrors = res.fieldErrors ?? {};
+      setErrors(fieldErrors);
+      // A message for a field this form does not render would otherwise be
+      // invisible, so promote the first of those into the toast.
+      const rendered = new Set(fields.map((f) => f.name));
+      const orphan = Object.entries(fieldErrors).find(([name]) => !rendered.has(name));
+      toastActionError(orphan ? { ...res, error: orphan[1] } : res);
     });
   }
 
@@ -57,15 +76,15 @@ export function SettingsForm({
                   : ""
               )}
             >
-              <Field label={f.label} hint={f.hint}>
+              <Field label={f.label} hint={f.hint} htmlFor={f.name} error={errors[f.name]}>
                 {f.type === "text" && (
-                  <Input value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                  <Input id={f.name} aria-invalid={Boolean(errors[f.name])} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "number" && (
-                  <Input type="number" value={Number(values[f.name] ?? 0)} onChange={(e) => set(f.name, Number(e.target.value))} />
+                  <Input id={f.name} aria-invalid={Boolean(errors[f.name])} type="number" value={Number(values[f.name] ?? 0)} onChange={(e) => set(f.name, Number(e.target.value))} />
                 )}
                 {f.type === "textarea" && (
-                  <Textarea rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                  <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "tags" && (
                   <TagsInput value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />

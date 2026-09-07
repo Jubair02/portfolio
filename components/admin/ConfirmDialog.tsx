@@ -3,6 +3,7 @@
 import { useState, useTransition, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Button } from "@/components/admin/ui/button";
 import {
   Dialog,
@@ -32,12 +33,12 @@ export function ConfirmDialog({
 
   function confirm() {
     start(async () => {
-      const res = await onConfirm();
+      const res = await runAction(onConfirm);
       if (res.ok) {
         toast.success("Done.");
         setOpen(false);
       } else {
-        toast.error(res.error ?? "Something went wrong.");
+        toastActionError(res);
       }
     });
   }

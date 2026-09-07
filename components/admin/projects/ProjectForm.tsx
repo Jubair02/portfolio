@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { runAction, toastActionError } from "@/components/admin/action-feedback";
 import { Loader2, X, Plus, Trash2 } from "lucide-react";
 import {
   projectSchema,
@@ -87,10 +88,9 @@ export function ProjectForm({
 
   function onSubmit(values: ProjectFormValues) {
     start(async () => {
-      const res =
-        mode === "create"
-          ? await createProject(values)
-          : await updateProject(id!, values);
+      const res = await runAction(() =>
+        mode === "create" ? createProject(values) : updateProject(id!, values)
+      );
 
       if (res.ok) {
         toast.success(mode === "create" ? "Project created." : "Project saved.");
@@ -103,7 +103,7 @@ export function ProjectForm({
           setError(k as keyof ProjectFormValues, { message: v });
         }
       }
-      toast.error(res.error ?? "Please fix the errors and try again.");
+      toastActionError(res, "Please fix the errors and try again.");
     });
   }
 

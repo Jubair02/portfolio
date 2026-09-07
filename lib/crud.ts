@@ -1,7 +1,8 @@
 import { revalidatePath } from "next/cache";
 import type { ZodType } from "zod";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin, type ActionResult } from "@/lib/auth-guard";
+import { adminGuard, type ActionResult } from "@/lib/auth-guard";
+import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
 import { logActivity } from "@/lib/activity";
 
 type Delegate = {
@@ -35,9 +36,15 @@ export async function crudCreate<T>(
   cfg: CrudConfig<T>,
   raw: Record<string, unknown>
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = cfg.schema.safeParse(raw);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   try {
     const delegate = delegateFor(cfg.model);
     const order = await delegate.count();
@@ -57,9 +64,15 @@ export async function crudUpdate<T>(
   id: string,
   raw: Record<string, unknown>
 ): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   const parsed = cfg.schema.safeParse(raw);
-  if (!parsed.success) return { ok: false, error: "Please fix the highlighted fields." };
+  if (!parsed.success)
+    return {
+      ok: false,
+      error: FIX_FIELDS_MESSAGE,
+      fieldErrors: toFieldErrors(parsed.error),
+    };
   try {
     await delegateFor(cfg.model).update({ where: { id }, data: cfg.toData(parsed.data) });
     const label = cfg.labelField ? String(parsed.data[cfg.labelField]) : undefined;
@@ -73,7 +86,8 @@ export async function crudUpdate<T>(
 }
 
 export async function crudDelete<T>(cfg: CrudConfig<T>, id: string): Promise<ActionResult> {
-  await requireAdmin();
+  const denied = await adminGuard();
+  if (denied) return denied;
   try {
     await delegateFor(cfg.model).delete({ where: { id } });
     await logActivity("deleted", cfg.entity);
