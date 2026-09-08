@@ -169,7 +169,9 @@ export type Project = {
   year: string;
   featured: boolean;
   gradient: string; // tailwind gradient stops for the cover
-  image?: string; // optional cover image in /public (falls back to gradient)
+  image?: string;
+  /** Extra screenshots shown inside the expanded case study. */
+  screenshots?: string[]; // optional cover image in /public (falls back to gradient)
   icon: IconName;
   links: { demo?: string; github?: string };
   metrics?: { label: string; value: string }[];
@@ -520,32 +522,7 @@ export const github = {
 /* -------------------------------------------------------------------------- */
 /* Blog / insights                                                            */
 /* -------------------------------------------------------------------------- */
-export type Post = {
-  title: string;
-  excerpt: string;
-  /** ISO date, e.g. "2026-05-12" */
-  date: string;
-  readingTime: string;
-  tag: string;
-  /** Must be a real URL — entries without one are not rendered. */
-  href: string;
-};
-
-/**
- * Real articles only. The Writing section hides itself while this is empty, so
- * add an entry here (dev.to, Medium, Hashnode, your own post — any real URL)
- * and the section appears automatically:
- *
- *   {
- *     title: "Optimizing Next.js for Core Web Vitals",
- *     excerpt: "The image, font, and rendering strategies I reach for.",
- *     date: "2026-01-18",
- *     readingTime: "5 min read",
- *     tag: "Performance",
- *     href: "https://dev.to/jubair02/optimizing-nextjs",
- *   },
- */
-export const posts: Post[] = [];
+/* Blog posts now live in the database (Admin → Blog Posts). */
 
 /* -------------------------------------------------------------------------- */
 /* Contact                                                                    */

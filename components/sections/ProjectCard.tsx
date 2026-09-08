@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Star } from "lucide-react";
 import type { Project } from "@/content/site";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { DataIcon, GithubIcon } from "@/components/icons";
@@ -48,10 +48,18 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
               />
             </>
           )}
-          <div className="relative flex items-center justify-between p-5">
-            <span className="glass rounded-full px-3 py-1 text-xs font-medium text-white">
-              {project.tagline}
-            </span>
+          <div className="relative flex items-center justify-between gap-3 p-5">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="glass truncate rounded-full px-3 py-1 text-xs font-medium text-white">
+                {project.tagline}
+              </span>
+              {project.featured && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--gold)]/90 px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-black">
+                  <Star className="size-3 fill-current" aria-hidden="true" />
+                  Featured
+                </span>
+              )}
+            </div>
             <span className="font-mono text-xs text-white/85">
               {String(index + 1).padStart(2, "0")} · {project.year}
             </span>
@@ -96,6 +104,22 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
                 <p className="mt-3 rounded-2xl bg-[color:var(--muted)]/50 p-4 text-sm leading-relaxed text-muted-foreground">
                   {project.caseStudy}
                 </p>
+                {project.screenshots && project.screenshots.length > 0 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {project.screenshots.map((src, i) => (
+                      <a
+                        key={src}
+                        href={src}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        aria-label={`${project.title} screenshot ${i + 1} (opens full size)`}
+                        className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-[color:var(--border)] transition-transform hover:scale-[1.03]"
+                      >
+                        <Image src={src} alt="" fill sizes="7rem" className="object-cover" />
+                      </a>
+                    ))}
+                  </div>
+                )}
                 {project.metrics && (
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     {project.metrics.map((m) => (

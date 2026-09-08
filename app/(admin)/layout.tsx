@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
+import { site } from "@/content/site";
 import "../globals.css";
 import { geistSans, geistMono } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { Toaster } from "@/components/admin/ui/sonner";
 
 export const metadata: Metadata = {
+  // Own root layout, so it needs its own base for the OG image URL.
+  metadataBase: new URL(site.url),
   title: "Admin · Portfolio CMS",
   robots: { index: false, follow: false },
 };

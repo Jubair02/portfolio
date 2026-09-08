@@ -1,6 +1,6 @@
 import { Mail, MapPin, Clock } from "lucide-react";
-import { contact } from "@/content/site";
 import type { HeroData, SocialLinkData } from "@/lib/data";
+import type { ContactCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { ContactForm } from "./ContactForm";
@@ -9,9 +9,11 @@ import { SocialIcons } from "@/components/ui/SocialIcons";
 export function Contact({
   hero,
   socials,
+  copy,
 }: {
   hero: HeroData;
   socials: SocialLinkData[];
+  copy: ContactCopy;
 }) {
   return (
     <Section id="contact" className="border-t border-[color:var(--border)]">
@@ -19,9 +21,9 @@ export function Contact({
         {/* Info */}
         <div>
           <SectionHeading
-            eyebrow={contact.eyebrow}
-            title={contact.title}
-            description={contact.description}
+            eyebrow={copy.eyebrow}
+            title={copy.title}
+            description={copy.description}
           />
 
           <Reveal delay={0.1}>
@@ -56,7 +58,7 @@ export function Contact({
                   <div>
                     <p className="text-xs text-muted-foreground">Response</p>
                     <p className="text-sm font-medium">
-                      {contact.responseTime}
+                      {copy.responseTime}
                     </p>
                   </div>
                 </div>

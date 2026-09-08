@@ -49,6 +49,7 @@ export default async function MessagesAdminPage({
       email: m.email,
       message: m.message,
       read: m.read,
+      repliedAt: m.repliedAt ? m.repliedAt.toISOString() : null,
       createdAt: m.createdAt.toISOString(),
     }));
   } catch {
@@ -68,6 +69,7 @@ export default async function MessagesAdminPage({
         pageSize={PAGE_SIZE}
         q={q}
         filter={filter}
+        emailConfigured={Boolean(process.env.RESEND_API_KEY?.trim())}
       />
     </div>
   );

@@ -23,6 +23,7 @@ export const ICON_NAMES = [
   "Sparkles",
   "Star",
   "Trophy",
+  "Users",
   "Wrench",
 ] as const;
 

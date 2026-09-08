@@ -18,7 +18,6 @@ export const projectSchema = z.object({
     })
   ),
   tech: z.array(z.string().min(1)),
-  category: z.string().optional(),
   year: z.string().optional(),
   featured: z.boolean(),
   status: z.enum(["DRAFT", "PUBLISHED"]),
@@ -41,7 +40,6 @@ export const projectDefaults: ProjectFormValues = {
   caseStudy: "",
   metrics: [],
   tech: [],
-  category: "",
   year: "",
   featured: false,
   status: "PUBLISHED",

@@ -5,15 +5,19 @@ import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
+import { BoldMarks } from "@/components/ui/BoldMarks";
 
 export function About({
   about,
   hero,
   resumeUrl,
+  note,
 }: {
   about: AboutData;
   hero: HeroData;
   resumeUrl: string;
+  /** "Currently learning …" card. Supports **bold**; empty hides the card. */
+  note: string;
 }) {
   return (
     <Section id="about">
@@ -95,26 +99,16 @@ export function About({
             ))}
           </RevealGroup>
 
-          <Reveal delay={0.15}>
-            <div className="surface mt-4 flex items-center gap-4 rounded-3xl p-6">
-              <div className="text-4xl">🚀</div>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                Currently sharpening my skills in{" "}
-                <span className="font-medium text-foreground">
-                  system design
-                </span>
-                ,{" "}
-                <span className="font-medium text-foreground">
-                  TypeScript
-                </span>{" "}
-                and{" "}
-                <span className="font-medium text-foreground">
-                  cloud deployment
-                </span>{" "}
-                — always learning, always building.
-              </p>
-            </div>
-          </Reveal>
+          {note.trim() && (
+            <Reveal delay={0.15}>
+              <div className="surface mt-4 flex items-center gap-4 rounded-3xl p-6">
+                <div className="text-4xl">🚀</div>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  <BoldMarks text={note} />
+                </p>
+              </div>
+            </Reveal>
+          )}
         </div>
       </div>
     </Section>

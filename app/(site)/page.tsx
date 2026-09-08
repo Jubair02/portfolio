@@ -9,10 +9,13 @@ import {
   getCertificates,
   getTestimonials,
   getSocialLinks,
+  getSiteCopy,
+  getPosts,
   type HeroData,
   type SocialLinkData,
 } from "@/lib/data";
 import { getSiteUrl } from "@/lib/site-url";
+import { getGitHubProfile } from "@/lib/github";
 import { Hero } from "@/components/sections/Hero";
 import { About } from "@/components/sections/About";
 import { Skills } from "@/components/sections/Skills";
@@ -64,6 +67,8 @@ function buildPersonJsonLd(
 export const revalidate = 60;
 
 export default async function Home() {
+  // Site copy first: the GitHub username it holds decides which profile to fetch.
+  const copy = await getSiteCopy();
   const [
     projects,
     hero,
@@ -76,6 +81,8 @@ export default async function Home() {
     testimonials,
     socials,
     siteUrl,
+    github,
+    posts,
   ] = await Promise.all([
     getProjects(),
     getHero(),
@@ -88,9 +95,12 @@ export default async function Home() {
     getTestimonials(),
     getSocialLinks(),
     getSiteUrl(),
+    getGitHubProfile(copy.githubUsername),
+    getPosts(),
   ]);
 
   const jsonLd = buildPersonJsonLd(hero, socials, siteUrl);
+  const { sections } = copy;
 
   return (
     <>
@@ -98,18 +108,22 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <Hero hero={hero} socials={socials} />
-      <About about={about} hero={hero} resumeUrl={hero.resumeUrl} />
-      <Skills categories={skills} />
-      <Projects projects={projects} />
-      <Experience experience={experience} education={education} />
-      <Services services={services} />
-      <Certifications certificates={certificates} />
-      <Testimonials testimonials={testimonials} />
+      <Hero hero={hero} socials={socials} stats={copy.heroStats} repoCount={github.repoCount} />
+      <About about={about} hero={hero} resumeUrl={hero.resumeUrl} note={copy.aboutNote} />
+      <Skills categories={skills} heading={sections.skills} marquee={copy.techMarquee} />
+      <Projects projects={projects} heading={sections.projects} githubUrl={github.url} />
+      <Experience experience={experience} education={education} heading={sections.experience} />
+      <Services services={services} heading={sections.services} />
+      <Certifications
+        certificates={certificates}
+        heading={sections.certifications}
+        achievements={copy.achievements}
+      />
+      <Testimonials testimonials={testimonials} heading={sections.testimonials} />
       <SectionDivider />
-      <GitHubStats />
-      <Blog />
-      <Contact hero={hero} socials={socials} />
+      <GitHubStats heading={sections.github} github={github} miniProjects={copy.miniProjects} />
+      <Blog heading={sections.blog} posts={posts} />
+      <Contact hero={hero} socials={socials} copy={copy.contact} />
     </>
   );
 }

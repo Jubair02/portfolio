@@ -60,11 +60,6 @@ model About {
   eyebrow           String
   title             String
   paragraphs        String[]
-  yearsOfExperience Int      @default(0)
-  education         String?
-  location          String?
-  resumeUrl         String?
-  personalInfo      Json?
   values            AboutValue[]
   updatedAt         DateTime @updatedAt
 }
@@ -94,7 +89,6 @@ model SiteSettings {
   logo         String?
   footerText   String?
   copyright    String?
-  resumeUrl    String?
   primaryColor String?
   accentColor  String?
   siteUrl      String?
@@ -136,7 +130,6 @@ model Project {
   description String
   caseStudy   String?
   tech        String[]
-  category    String?
   year        String?
   featured    Boolean       @default(false)
   status      ProjectStatus @default(PUBLISHED)
@@ -216,6 +209,8 @@ model ContactMessage {
   subject   String?
   message   String
   read      Boolean  @default(false)
+  /// Set when the admin answers from the inbox (in-app reply via Resend).
+  repliedAt DateTime?
   createdAt DateTime @default(now())
 
   @@index([read])
@@ -240,6 +235,8 @@ model MediaAsset {
   format    String?
   bytes     Int?
   folder    String?
+  /// Cloudinary resource type: "image" for pictures, "raw" for PDFs (résumé).
+  resourceType String @default("image")
   createdAt DateTime @default(now())
 }
 
@@ -263,4 +260,51 @@ model RateLimit {
   expiresAt DateTime
 
   @@index([expiresAt])
+}
+
+/// Editable copy that used to be hardcoded: hero stats strip, section
+/// headings, About note, skills marquee, "By the numbers", contact text,
+/// GitHub username and the "More experiments" links. Singleton row.
+model SiteCopy {
+  id                  String   @id @default("singleton")
+  heroStats           Json
+  sections            Json
+  aboutNote           String   @default("")
+  techMarquee         String[]
+  achievements        Json
+  contactEyebrow      String
+  contactTitle        String
+  contactDescription  String
+  contactResponseTime String
+  githubUsername      String
+  miniProjects        Json
+  /// Header/footer navigation: [{ label, href }] where href is a section anchor.
+  navItems            Json     @default("[]")
+  updatedAt           DateTime @updatedAt
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+/// Blog posts. Written here (content) or linked out (externalUrl); cards link
+/// to externalUrl when set, otherwise to /blog/<slug>.
+model Post {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  excerpt     String
+  tag         String?
+  readingTime String?
+  content     String     @default("")
+  externalUrl String?
+  coverImage  String?
+  publishedAt DateTime   @default(now())
+  status      PostStatus @default(DRAFT)
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, publishedAt])
 }

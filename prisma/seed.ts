@@ -20,6 +20,7 @@ import {
   certifications,
   testimonials,
 } from "../content/site";
+import { staticSiteCopy } from "../lib/site-copy-defaults";
 
 const prisma = new PrismaClient();
 
@@ -102,10 +103,6 @@ async function main() {
       eyebrow: about.eyebrow,
       title: about.title,
       paragraphs: [...about.paragraphs],
-      yearsOfExperience: 3,
-      education: "B.Sc. in Computer Science & Engineering",
-      location: site.location,
-      resumeUrl: site.resumeUrl,
       values: {
         create: about.values.map((v, i) => ({
           icon: v.icon,
@@ -281,12 +278,35 @@ async function main() {
       id: "singleton",
       footerText: `Designed & built by ${site.name}.`,
       copyright: `© ${new Date().getFullYear()} ${site.name}. All rights reserved.`,
-      resumeUrl: site.resumeUrl,
       primaryColor: "#6d5efc",
       accentColor: "#0891b2",
       siteUrl: site.url,
     },
   });
+
+  // --- Site copy (headings, hero stats, contact text, GitHub handle) ------
+  {
+    const c = staticSiteCopy();
+    const data = {
+      heroStats: c.heroStats,
+      sections: c.sections,
+      aboutNote: c.aboutNote,
+      techMarquee: c.techMarquee,
+      achievements: c.achievements,
+      contactEyebrow: c.contact.eyebrow,
+      contactTitle: c.contact.title,
+      contactDescription: c.contact.description,
+      contactResponseTime: c.contact.responseTime,
+      githubUsername: c.githubUsername,
+      miniProjects: c.miniProjects,
+      navItems: c.navItems,
+    };
+    await prisma.siteCopy.upsert({
+      where: { id: "singleton" },
+      update: {},
+      create: { id: "singleton", ...data },
+    });
+  }
 
   console.log("✔ Portfolio content seeded.");
 }

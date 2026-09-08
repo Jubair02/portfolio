@@ -29,6 +29,15 @@ Copy `.env.example` → `.env` and fill in:
 `.env` is gitignored — never commit it. Prisma CLI settings (schema path, seed
 command) live in `prisma.config.ts`, which loads `.env` via `dotenv`.
 
+> **PDF résumé uploads** (Hero → Résumé → Upload PDF) are stored as Cloudinary
+> *raw* assets. New Cloudinary accounts block PDF delivery by default — if the
+> uploaded link returns 401, enable **Settings → Security → "Allow delivery of
+> PDF and ZIP files"** in your Cloudinary console.
+
+> **Analytics:** the public layout renders Vercel Analytics (`@vercel/analytics`).
+> Turn on *Analytics* in the Vercel project settings to start collecting page
+> views and Web Vitals; it is a no-op everywhere else.
+
 ## 2. Database setup
 
 ```bash
@@ -153,11 +162,15 @@ section reads live from the DB (with static fallback if the DB is unreachable).
 | Certificates | CRUD + image | ✅ |
 | Services | CRUD | ✅ |
 | Testimonials | CRUD + rating + photo | ✅ |
-| Contact Messages | search / filter / read / reply / delete / paginate | inbound from contact form |
+| Contact Messages | search / filter / read / **in-app reply (Resend)** / delete / paginate / CSV export | inbound from contact form |
 | Social Links | CRUD + visibility | ✅ (footer) |
 | SEO Settings | title / description / keywords / OG / favicon | ✅ (`generateMetadata`) |
 | Site Settings | footer / copyright / résumé / colors / siteUrl (validated as an absolute `http(s)` URL) | ✅ (footer + metadataBase) |
-| Media Library | upload / preview / copy URL / delete / search | Cloudinary |
+| Site Copy | hero stats · section headings · About note · skills marquee · "By the numbers" · contact text · GitHub username · mini-project links | ✅ (every section) |
+| Backup & Restore | export every content table as JSON · restore from a file (one transaction, all-or-nothing) | — |
+| Blog Posts | write posts (simple markdown) or link out · draft/published · cover image · reorder | ✅ (Blog section + /blog/<slug>) |
+| Activity Log | full paginated history of admin changes | — |
+| Media Library | upload / preview / copy URL / delete · search · "Used in …" badges · delete unused · pagination | Cloudinary |
 | Profile | name / email / picture + change password | — |
 
 ### Patterns used

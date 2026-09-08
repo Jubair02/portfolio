@@ -1,24 +1,33 @@
 import { ArrowUpRight } from "lucide-react";
-import { site, type Project } from "@/content/site";
+import type { Project } from "@/content/site";
+import type { SectionCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { ProjectCard } from "./ProjectCard";
 import { GithubIcon } from "@/components/icons";
 
-export function Projects({ projects }: { projects: Project[] }) {
+export function Projects({
+  projects,
+  heading,
+  githubUrl,
+}: {
+  projects: Project[];
+  heading: SectionCopy;
+  githubUrl: string;
+}) {
   // Nothing published — hide the section rather than render a bare heading.
   if (projects.length === 0) return null;
   return (
     <Section id="work" className="border-t border-[color:var(--border)]">
       <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
         <SectionHeading
-          eyebrow="Selected work"
-          title="Projects I'm proud of"
-          description="A selection of things I've designed and built — from responsive front-ends to .NET APIs. Each one taught me something new."
+          eyebrow={heading.eyebrow}
+          title={heading.title}
+          description={heading.description}
         />
         <Reveal delay={0.1}>
           <a
-            href={site.socials.github}
+            href={githubUrl}
             target="_blank"
             rel="noreferrer noopener"
             className="group inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-5 py-2.5 text-sm font-medium transition-colors hover:border-[color:var(--primary)]/50"

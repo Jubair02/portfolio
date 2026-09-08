@@ -12,7 +12,14 @@ export const heroSchema = z.object({
   availabilityOpen: z.boolean(),
   availabilityLabel: z.string().min(1),
   email: z.string().email("Enter a valid email."),
-  resumeUrl: z.string().min(1),
+  resumeUrl: z
+    .string()
+    .trim()
+    .min(1, "Add a résumé link or upload a PDF.")
+    .refine(
+      (v) => v.startsWith("/") || /^https?:\/\//i.test(v),
+      "Use a site path like /Resume.pdf or a full https:// URL."
+    ),
   heroImage: z.string().optional(),
   primaryCtaLabel: z.string().min(1),
   primaryCtaHref: z.string().min(1),

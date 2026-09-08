@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Pause, Play, Quote, Star } from "lucide-react";
 import type { TestimonialData } from "@/lib/data";
+import type { SectionCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,13 @@ function Rating({ rating }: { rating: number }) {
   );
 }
 
-export function Testimonials({ testimonials }: { testimonials: TestimonialData[] }) {
+export function Testimonials({
+  testimonials,
+  heading,
+}: {
+  testimonials: TestimonialData[];
+  heading: SectionCopy;
+}) {
   const reduce = useReducedMotion();
   const [[index, dir], setState] = useState<[number, number]>([0, 0]);
   const [hoverPaused, setHoverPaused] = useState(false);
@@ -77,8 +84,9 @@ export function Testimonials({ testimonials }: { testimonials: TestimonialData[]
   return (
     <Section id="testimonials" className="border-t border-[color:var(--border)]">
       <SectionHeading
-        eyebrow="Testimonials"
-        title="Kind words from people I've worked with"
+        eyebrow={heading.eyebrow}
+        title={heading.title}
+        description={heading.description || undefined}
         align="center"
         className="mx-auto text-center"
       />

@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/
 import { Field } from "@/components/admin/Field";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TagsInput } from "@/components/admin/TagsInput";
+import { ResumeUpload } from "@/components/admin/ResumeUpload";
 
 export function HeroForm({ initial }: { initial: HeroFormValues }) {
   const router = useRouter();
@@ -114,8 +115,24 @@ export function HeroForm({ initial }: { initial: HeroFormValues }) {
                 <Input id="secondaryCtaHref" {...register("secondaryCtaHref")} />
               </Field>
             </div>
-            <Field label="Résumé link" htmlFor="resumeUrl" error={errors.resumeUrl?.message}>
-              <Input id="resumeUrl" {...register("resumeUrl")} />
+            <Field
+              label="Résumé"
+              htmlFor="resumeUrl"
+              hint="Upload a PDF, or type a path / URL. Powers the “Download résumé” button."
+              error={errors.resumeUrl?.message}
+            >
+              <Controller
+                control={control}
+                name="resumeUrl"
+                render={({ field }) => (
+                  <ResumeUpload
+                    id="resumeUrl"
+                    value={field.value}
+                    onChange={field.onChange}
+                    invalid={Boolean(errors.resumeUrl)}
+                  />
+                )}
+              />
             </Field>
           </CardContent>
         </Card>

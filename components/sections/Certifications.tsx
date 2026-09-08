@@ -1,21 +1,30 @@
 import Image from "next/image";
-import { achievements } from "@/content/site";
 import type { CertificateData } from "@/lib/data";
+import type { Achievement, SectionCopy } from "@/lib/schemas/site-copy";
+import { cn } from "@/lib/utils";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 
-export function Certifications({ certificates }: { certificates: CertificateData[] }) {
+export function Certifications({
+  certificates,
+  heading,
+  achievements,
+}: {
+  certificates: CertificateData[];
+  heading: SectionCopy;
+  achievements: Achievement[];
+}) {
   if (certificates.length === 0) return null;
   return (
     <Section id="certifications" className="border-t border-[color:var(--border)]">
       <SectionHeading
-        eyebrow="Credentials"
-        title="Certifications & achievements"
-        description="Continuous learning is part of the job. Here are a few milestones along the way."
+        eyebrow={heading.eyebrow}
+        title={heading.title}
+        description={heading.description}
       />
 
-      <div className="mt-14 grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className={cn("mt-14 grid gap-6", achievements.length > 0 && "lg:grid-cols-[1.2fr_1fr]")}>
         {/* Certifications */}
         <div>
           <RevealGroup className="grid gap-4 sm:grid-cols-2">
@@ -61,7 +70,8 @@ export function Certifications({ certificates }: { certificates: CertificateData
           </RevealGroup>
         </div>
 
-        {/* Achievements */}
+        {/* Achievements — hidden when the admin leaves the panel empty */}
+        {achievements.length > 0 && (
         <Reveal direction="left">
           <div className="surface relative h-full overflow-hidden rounded-3xl p-7">
             <div className="pointer-events-none absolute -right-10 -top-10 size-40 rounded-full bg-accent-2/15 blur-2xl" />
@@ -85,6 +95,7 @@ export function Certifications({ certificates }: { certificates: CertificateData
             </ul>
           </div>
         </Reveal>
+        )}
       </div>
     </Section>
   );

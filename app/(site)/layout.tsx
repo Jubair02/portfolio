@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "../globals.css";
 import { site } from "@/content/site";
-import { getSocialLinks, getSeo, getSiteSettings, getHero } from "@/lib/data";
+import { getSocialLinks, getSeo, getSiteSettings, getHero, getSiteCopy } from "@/lib/data";
 import { normalizeSiteUrl } from "@/lib/site-url";
 import { geistSans, geistMono } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
@@ -13,6 +13,7 @@ import { Footer } from "@/components/layout/Footer";
 import { BrandTokens } from "@/components/layout/BrandTokens";
 import { Preloader } from "@/components/layout/Preloader";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
+import { Analytics } from "@vercel/analytics/next";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [seo, settings] = await Promise.all([getSeo(), getSiteSettings()]);
@@ -79,10 +80,11 @@ export const viewport: Viewport = {
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [socials, settings, hero] = await Promise.all([
+  const [socials, settings, hero, copy] = await Promise.all([
     getSocialLinks(),
     getSiteSettings(),
     getHero(),
+    getSiteCopy(),
   ]);
   return (
     <html
@@ -119,6 +121,7 @@ export default async function SiteLayout({
                 logo: settings.logo,
               }}
               socials={socials}
+              nav={copy.navItems}
             />
             <main id="main">{children}</main>
             <Footer
@@ -127,9 +130,12 @@ export default async function SiteLayout({
               footerText={settings.footerText}
               copyright={settings.copyright}
               logo={settings.logo}
+              nav={copy.navItems}
             />
           </SmoothScroll>
         </ThemeProvider>
+        {/* Page views + Web Vitals in the Vercel dashboard. No-op outside Vercel. */}
+        <Analytics />
       </body>
     </html>
   );

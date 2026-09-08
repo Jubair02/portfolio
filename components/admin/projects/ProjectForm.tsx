@@ -132,7 +132,7 @@ export function ProjectForm({
                 label="Slug"
                 htmlFor="slug"
                 error={errors.slug?.message}
-                hint="Used in the URL. Lowercase letters, numbers and dashes."
+                hint="Unique identifier — lowercase letters, numbers and dashes. Reserved for future per-project pages."
               >
                 <div className="flex gap-2">
                   <Input id="slug" {...register("slug")} />
@@ -244,7 +244,10 @@ export function ProjectForm({
                 />
               </Field>
 
-              <Field label="Screenshots">
+              <Field
+                label="Screenshots"
+                hint="Shown as a thumbnail strip inside the expanded case study on the site."
+              >
                 <div className="space-y-3">
                   {screenshots.length > 0 && (
                     <div className="grid grid-cols-3 gap-2">
@@ -336,9 +339,6 @@ export function ProjectForm({
               <CardTitle className="text-base">Meta</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Field label="Category" htmlFor="category">
-                <Input id="category" {...register("category")} />
-              </Field>
               <Field label="Year" htmlFor="year">
                 <Input id="year" {...register("year")} />
               </Field>

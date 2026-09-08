@@ -89,3 +89,23 @@ export async function getRecentActivity(limit = 8): Promise<ActivityEntry[]> {
     return [];
   }
 }
+
+/** One page of the full activity log, newest first. */
+export async function getActivityPage(
+  page: number,
+  pageSize: number
+): Promise<{ entries: ActivityEntry[]; total: number }> {
+  try {
+    const [entries, total] = await Promise.all([
+      prisma.activityLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (Math.max(1, page) - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.activityLog.count(),
+    ]);
+    return { entries, total };
+  } catch {
+    return { entries: [], total: 0 };
+  }
+}

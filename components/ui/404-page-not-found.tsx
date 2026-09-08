@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Compass, Home } from "lucide-react";
-import { site, nav } from "@/content/site";
+import { site } from "@/content/site";
 import { Button } from "@/components/ui/Button";
 
 /**
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
  * ships no third-party assets — the artwork is the same gradient/grid language
  * as the hero, drawn in CSS.
  */
-export function NotFoundPage() {
+export function NotFoundPage({ nav }: { nav: { label: string; href: string }[] }) {
   return (
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-5 py-24 text-foreground">
       {/* Backdrop: grid + brand glows, faded out toward the edges. */}

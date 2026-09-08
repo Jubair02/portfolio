@@ -2,8 +2,9 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { uploadBuffer, deleteAsset } from "@/lib/cloudinary";
+import { uploadBuffer, uploadRawBuffer, deleteAsset } from "@/lib/cloudinary";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
+import { collectImageUsages, findImageUsages } from "@/lib/media-usage";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/svg+xml"];
 
@@ -34,6 +35,7 @@ export async function uploadImageAction(formData: FormData): Promise<UploadState
         format: result.format,
         bytes: result.bytes,
         folder,
+        resourceType: "image",
       },
     });
 
@@ -45,46 +47,52 @@ export async function uploadImageAction(formData: FormData): Promise<UploadState
 }
 
 /**
- * Every place an uploaded image URL can be stored. Deleting an asset that one
- * of these still points at would leave a broken image on the live site.
+ * Résumé (PDF) upload. Stored as a Cloudinary raw asset under a stable name so
+ * re-uploading replaces the file; the versioned URL still changes, which is
+ * what busts the CDN cache.
+ *
+ * Cloudinary accounts created recently block PDF delivery until "Allow
+ * delivery of PDF and ZIP files" is switched on under Settings → Security. If
+ * the uploaded link returns 401, that is the switch to flip.
  */
-async function findImageUsages(url: string): Promise<string[]> {
-  const [hero, projects, testimonials, certificates, experiences, educations, settings, seo, users] =
-    await Promise.all([
-      prisma.hero.findUnique({
-        where: { id: "singleton" },
-        select: { heroImage: true, backgroundImage: true },
-      }),
-      prisma.project.findMany({
-        where: { OR: [{ image: url }, { screenshots: { has: url } }] },
-        select: { title: true },
-      }),
-      prisma.testimonial.findMany({ where: { image: url }, select: { name: true } }),
-      prisma.certificate.findMany({ where: { image: url }, select: { title: true } }),
-      prisma.experience.findMany({ where: { logo: url }, select: { company: true } }),
-      prisma.education.findMany({ where: { logo: url }, select: { institute: true } }),
-      prisma.siteSettings.findUnique({ where: { id: "singleton" }, select: { logo: true } }),
-      prisma.seoSettings.findUnique({
-        where: { id: "singleton" },
-        select: { ogImage: true, favicon: true },
-      }),
-      prisma.user.findMany({ where: { image: url }, select: { name: true } }),
-    ]);
+export async function uploadResumeAction(formData: FormData): Promise<UploadState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Not authorized." };
 
-  const used: string[] = [];
-  if (hero?.heroImage === url) used.push("Hero image");
-  if (hero?.backgroundImage === url) used.push("Hero background");
-  for (const p of projects) used.push(`project “${p.title}”`);
-  for (const t of testimonials) used.push(`testimonial from ${t.name}`);
-  for (const c of certificates) used.push(`certificate “${c.title}”`);
-  for (const e of experiences) used.push(`experience at ${e.company}`);
-  for (const e of educations) used.push(`education at ${e.institute}`);
-  if (settings?.logo === url) used.push("Site Settings logo");
-  if (seo?.ogImage === url) used.push("SEO Open Graph image");
-  if (seo?.favicon === url) used.push("SEO favicon");
-  for (const u of users) used.push(`profile picture of ${u.name}`);
-  return used;
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No file provided." };
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  if (!isPdf) return { error: "Please upload a PDF file." };
+  if (file.size > MAX_UPLOAD_BYTES) return { error: `File is larger than ${MAX_UPLOAD_LABEL}.` };
+
+  // PDFs start with "%PDF-"; reject anything merely renamed to .pdf.
+  const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.subarray(0, 5).toString("latin1") !== "%PDF-") {
+    return { error: "That file does not look like a PDF." };
+  }
+
+  try {
+    const folder = "portfolio/resume";
+    const result = await uploadRawBuffer(buffer, folder, "resume.pdf");
+    await prisma.mediaAsset.upsert({
+      where: { publicId: result.publicId },
+      update: { url: result.url, bytes: result.bytes, format: "pdf", folder, resourceType: "raw" },
+      create: {
+        publicId: result.publicId,
+        url: result.url,
+        format: "pdf",
+        bytes: result.bytes,
+        folder,
+        resourceType: "raw",
+      },
+    });
+    return { url: result.url, publicId: result.publicId };
+  } catch (err) {
+    console.error("[resume] upload failed:", err);
+    return { error: "Upload failed. Check your Cloudinary credentials." };
+  }
 }
+
 
 /**
  * Delete an uploaded asset (from Cloudinary + media library) — unless some
@@ -105,11 +113,35 @@ export async function deleteImageAction(publicId: string): Promise<UploadState> 
         };
       }
     }
-    await deleteAsset(publicId);
+    await deleteAsset(publicId, asset?.resourceType === "raw" ? "raw" : "image");
     await prisma.mediaAsset.deleteMany({ where: { publicId } });
     return { publicId };
   } catch (err) {
     console.error("[upload] delete failed:", err);
     return { error: "Delete failed." };
+  }
+}
+
+/** Remove every asset that no content references (Cloudinary + library). */
+export async function deleteUnusedAssetsAction(): Promise<{ ok: boolean; error?: string; deleted?: number }> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, error: "Not authorized." };
+  try {
+    const [assets, usage] = await Promise.all([prisma.mediaAsset.findMany(), collectImageUsages()]);
+    const unused = assets.filter((a) => !usage.has(a.url));
+    let deleted = 0;
+    for (const a of unused) {
+      try {
+        await deleteAsset(a.publicId, a.resourceType === "raw" ? "raw" : "image");
+        await prisma.mediaAsset.delete({ where: { id: a.id } });
+        deleted += 1;
+      } catch (err) {
+        console.warn(`[media] could not delete ${a.publicId}:`, err);
+      }
+    }
+    return { ok: true, deleted };
+  } catch (err) {
+    console.error("[media] delete unused failed:", err);
+    return { ok: false, error: "Could not clean up unused files." };
   }
 }

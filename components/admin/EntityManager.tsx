@@ -42,7 +42,8 @@ export type FieldType =
   | "tags"
   | "switch"
   | "select"
-  | "icon";
+  | "icon"
+  | "date";
 
 export type FieldConfig = {
   name: string;
@@ -55,6 +56,8 @@ export type FieldConfig = {
   optional?: boolean; // icon fields only: allow clearing the value
   /** tags fields only: "line" for full sentences (commas don't split), default "tag" */
   variant?: "tag" | "line";
+  /** textarea fields only: visible rows (default 3) */
+  rows?: number;
   full?: boolean; // span both columns
   defaultValue?: unknown;
 };
@@ -311,7 +314,10 @@ function EntityDialog({
                   <Input id={f.name} aria-invalid={Boolean(errors[f.name])} type="number" value={Number(values[f.name] ?? 0)} onChange={(e) => set(f.name, Number(e.target.value))} />
                 )}
                 {f.type === "textarea" && (
-                  <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                  <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={f.rows ?? 3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
+                )}
+                {f.type === "date" && (
+                  <Input id={f.name} aria-invalid={Boolean(errors[f.name])} type="date" value={String(values[f.name] ?? "")} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "tags" && (
                   <TagsInput value={(values[f.name] as string[]) ?? []} variant={f.variant} onChange={(v) => set(f.name, v)} />

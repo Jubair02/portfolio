@@ -1,26 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { nav } from "@/content/site";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { PlatformIcon, SocialIcons } from "@/components/ui/SocialIcons";
 import { smoothScrollTo, useLenis } from "@/components/providers/SmoothScroll";
 
-const sectionIds = nav.map((n) => n.href.replace("#", ""));
 
 export function Navbar({
   brand,
   socials,
+  nav,
 }: {
   brand: { name: string; initials: string; logo?: string | null };
   socials: { platform: string; url: string }[];
+  /** Admin → Site Copy → Navigation. */
+  nav: { label: string; href: string }[];
 }) {
   const lenis = useLenis();
+  const sectionIds = useMemo(() => nav.map((n) => n.href.replace("#", "")), [nav]);
   // The condensed bar has room for a single icon: prefer GitHub, else the
   // first link the admin has marked visible.
   const primarySocial =
@@ -53,7 +55,7 @@ export function Navbar({
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, []);
+  }, [sectionIds]);
 
   // Lock scroll (and pause Lenis) when the mobile menu is open
   useEffect(() => {
@@ -165,7 +167,7 @@ export function Navbar({
             return (
               <li key={item.href}>
                 <a
-                  href={item.href}
+                  href={`/${item.href}`}
                   aria-current={isActive ? "true" : undefined}
                   className={cn(
                     "group/navlink relative rounded-full px-4 py-2 text-sm font-medium transition-colors",
@@ -204,7 +206,7 @@ export function Navbar({
           )}
           <ThemeToggle className="hidden sm:grid" />
           <div className="hidden lg:block">
-            <Button href="#contact" size="sm" magnetic>
+            <Button href="/#contact" size="sm" magnetic>
               Let&apos;s talk
             </Button>
           </div>
@@ -259,7 +261,7 @@ export function Navbar({
                     transition={{ delay: 0.06 * i + 0.05 }}
                   >
                     <a
-                      href={item.href}
+                      href={`/${item.href}`}
                       onClick={() => setOpen(false)}
                       className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-lg font-medium text-foreground/90 transition-colors hover:bg-[color:var(--muted)] hover:text-foreground"
                     >
@@ -277,7 +279,7 @@ export function Navbar({
                   <SocialIcons links={socials} limit={3} iconClassName="size-5" />
                   <ThemeToggle />
                 </div>
-                <Button href="#contact" size="sm" onClick={() => setOpen(false)}>
+                <Button href="/#contact" size="sm" onClick={() => setOpen(false)}>
                   Let&apos;s talk
                 </Button>
               </div>

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { CheckCircle2, MapPin } from "lucide-react";
 import type { ExperienceData, EducationData } from "@/lib/data";
+import type { SectionCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
@@ -23,9 +24,11 @@ type TimelineEntry = {
 export function Experience({
   experience,
   education,
+  heading,
 }: {
   experience: ExperienceData[];
   education: EducationData[];
+  heading: SectionCopy;
 }) {
   const entries: TimelineEntry[] = [
     ...experience.map((e, i) => ({
@@ -59,9 +62,9 @@ export function Experience({
   return (
     <Section id="experience" className="border-t border-[color:var(--border)]">
       <SectionHeading
-        eyebrow="Journey"
-        title="Experience & education"
-        description="The path so far — a mix of building in the open, client work, and formal study."
+        eyebrow={heading.eyebrow}
+        title={heading.title}
+        description={heading.description}
       />
 
       <ol className="relative mt-14 ml-4 space-y-6 border-l border-[color:var(--border)] pl-8 sm:ml-5 sm:pl-10">

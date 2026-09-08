@@ -1,16 +1,23 @@
 import type { ServiceData } from "@/lib/data";
+import type { SectionCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
 
-export function Services({ services }: { services: ServiceData[] }) {
+export function Services({
+  services,
+  heading,
+}: {
+  services: ServiceData[];
+  heading: SectionCopy;
+}) {
   if (services.length === 0) return null;
   return (
     <Section id="services" className="border-t border-[color:var(--border)]">
       <SectionHeading
-        eyebrow="Services"
-        title="How I can help"
-        description="Whether you're a founder validating an idea or a team that needs an extra pair of expert hands — here's what I bring to the table."
+        eyebrow={heading.eyebrow}
+        title={heading.title}
+        description={heading.description}
         align="center"
         className="mx-auto text-center"
       />

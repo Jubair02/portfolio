@@ -23,6 +23,8 @@ import {
   type Project,
 } from "@/content/site";
 import type { IconName } from "@/components/icons";
+import { siteCopySchema, type SiteCopyFormValues } from "@/lib/schemas/site-copy";
+import { staticSiteCopy } from "@/lib/site-copy-defaults";
 
 type Metric = { label: string; value: string };
 
@@ -99,7 +101,6 @@ export type SiteSettingsData = {
   logo: string | null;
   footerText: string | null;
   copyright: string | null;
-  resumeUrl: string | null;
   primaryColor: string | null;
   accentColor: string | null;
   siteUrl: string;
@@ -384,7 +385,6 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     logo: null,
     footerText: `${site.role} building fast, elegant products for the web.`,
     copyright: `© ${site.name}. All rights reserved.`,
-    resumeUrl: site.resumeUrl,
     primaryColor: null,
     accentColor: null,
     siteUrl: site.url,
@@ -396,7 +396,6 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       logo: s.logo,
       footerText: s.footerText,
       copyright: s.copyright,
-      resumeUrl: s.resumeUrl,
       primaryColor: s.primaryColor,
       accentColor: s.accentColor,
       siteUrl: s.siteUrl ?? site.url,
@@ -444,6 +443,7 @@ export async function getProjects(): Promise<Project[]> {
       featured: p.featured,
       gradient: p.gradient ?? "from-primary via-accent-2 to-accent",
       image: p.image ?? undefined,
+      screenshots: p.screenshots,
       icon: (p.icon as IconName) ?? "Sparkles",
       links: {
         demo: p.liveUrl ?? undefined,
@@ -460,5 +460,101 @@ export async function getProjects(): Promise<Project[]> {
       err instanceof Error ? err.message : err
     );
     return staticProjects;
+  }
+}
+
+export type SiteCopyData = SiteCopyFormValues;
+
+/**
+ * Editable site copy (headings, hero stats, contact text, GitHub handle …).
+ * Falls back to the copy the site shipped with until the row is first saved.
+ */
+export async function getSiteCopy(): Promise<SiteCopyData> {
+  try {
+    const row = await prisma.siteCopy.findUnique({ where: { id: "singleton" } });
+    if (!row) return staticSiteCopy();
+    const parsed = siteCopySchema.safeParse({
+      heroStats: row.heroStats,
+      sections: row.sections,
+      aboutNote: row.aboutNote,
+      techMarquee: row.techMarquee,
+      achievements: row.achievements,
+      contact: {
+        eyebrow: row.contactEyebrow,
+        title: row.contactTitle,
+        description: row.contactDescription,
+        responseTime: row.contactResponseTime,
+      },
+      githubUsername: row.githubUsername,
+      miniProjects: row.miniProjects,
+      navItems: row.navItems,
+    });
+    if (!parsed.success) {
+      console.warn("[data] getSiteCopy: stored copy failed validation, using defaults.");
+      return staticSiteCopy();
+    }
+    return parsed.data;
+  } catch {
+    return staticSiteCopy();
+  }
+}
+
+export type PostData = {
+  title: string;
+  slug: string;
+  excerpt: string;
+  tag: string | null;
+  readingTime: string | null;
+  /** ISO timestamp. */
+  publishedAt: string;
+  externalUrl: string | null;
+  coverImage: string | null;
+  content: string;
+};
+
+function toPostData(p: {
+  title: string;
+  slug: string;
+  excerpt: string;
+  tag: string | null;
+  readingTime: string | null;
+  publishedAt: Date;
+  externalUrl: string | null;
+  coverImage: string | null;
+  content: string;
+}): PostData {
+  return {
+    title: p.title,
+    slug: p.slug,
+    excerpt: p.excerpt,
+    tag: p.tag,
+    readingTime: p.readingTime,
+    publishedAt: p.publishedAt.toISOString(),
+    externalUrl: p.externalUrl,
+    coverImage: p.coverImage,
+    content: p.content,
+  };
+}
+
+/** Published posts, newest first (manual order wins when set). */
+export async function getPosts(): Promise<PostData[]> {
+  try {
+    const rows = await prisma.post.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: [{ order: "asc" }, { publishedAt: "desc" }],
+    });
+    return rows.map(toPostData);
+  } catch {
+    return [];
+  }
+}
+
+/** One published post by slug, or null (drafts are invisible to the public). */
+export async function getPost(slug: string): Promise<PostData | null> {
+  try {
+    const row = await prisma.post.findFirst({ where: { slug, status: "PUBLISHED" } });
+    return row ? toPostData(row) : null;
+  } catch {
+    return null;
   }
 }

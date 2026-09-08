@@ -1,8 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { techMarquee } from "@/content/site";
 import type { SkillCategoryData } from "@/lib/data";
+import type { SectionCopy } from "@/lib/schemas/site-copy";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal } from "@/components/ui/Reveal";
 import { DataIcon } from "@/components/icons";
@@ -30,14 +30,22 @@ function SkillBar({ name, level }: { name: string; level: number }) {
   );
 }
 
-export function Skills({ categories }: { categories: SkillCategoryData[] }) {
+export function Skills({
+  categories,
+  heading,
+  marquee,
+}: {
+  categories: SkillCategoryData[];
+  heading: SectionCopy;
+  marquee: string[];
+}) {
   if (categories.length === 0) return null;
   return (
     <Section id="skills" className="border-t border-[color:var(--border)]">
       <SectionHeading
-        eyebrow="Skills"
-        title="A modern, full-stack toolkit"
-        description="Battle-tested technologies I use to design, build, and ship products end to end."
+        eyebrow={heading.eyebrow}
+        title={heading.title}
+        description={heading.description}
       />
 
       <div className="mt-14 grid gap-6 lg:grid-cols-3">
@@ -69,9 +77,10 @@ export function Skills({ categories }: { categories: SkillCategoryData[] }) {
       </div>
 
       {/* Tech marquee */}
+      {marquee.length > 0 && (
       <div className="mask-fade-x relative mt-12 flex overflow-hidden">
         <div className="animate-marquee pause-hover flex shrink-0 items-center gap-3 pr-3">
-          {[...techMarquee, ...techMarquee].map((tech, i) => (
+          {[...marquee, ...marquee].map((tech, i) => (
             <span
               key={`${tech}-${i}`}
               className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-4 py-2 text-sm font-medium text-foreground/80"
@@ -82,6 +91,7 @@ export function Skills({ categories }: { categories: SkillCategoryData[] }) {
           ))}
         </div>
       </div>
+      )}
     </Section>
   );
 }

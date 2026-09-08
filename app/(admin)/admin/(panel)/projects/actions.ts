@@ -19,7 +19,6 @@ function toData(v: ProjectFormValues): Prisma.ProjectUncheckedCreateInput {
     caseStudy: orEmpty(v.caseStudy),
     metrics: v.metrics.length > 0 ? (v.metrics as Prisma.InputJsonValue) : Prisma.DbNull,
     tech: v.tech,
-    category: orEmpty(v.category),
     year: orEmpty(v.year),
     featured: v.featured,
     status: v.status,

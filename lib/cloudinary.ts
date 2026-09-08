@@ -40,9 +40,39 @@ export function uploadBuffer(
   });
 }
 
+/**
+ * Upload a non-image file (PDF résumé) as a Cloudinary "raw" asset. Raw public
+ * ids carry their extension, so the delivered URL ends in .pdf and browsers
+ * open it as a document.
+ */
+export function uploadRawBuffer(
+  buffer: Buffer,
+  folder: string,
+  filename: string
+): Promise<UploadResult> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "raw", public_id: filename, overwrite: true, invalidate: true },
+      (error, result) => {
+        if (error || !result) return reject(error ?? new Error("Upload failed"));
+        resolve({
+          url: result.secure_url,
+          publicId: result.public_id,
+          format: filename.split(".").pop(),
+          bytes: result.bytes,
+        });
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
 /** Delete an asset from Cloudinary by public id. */
-export async function deleteAsset(publicId: string): Promise<void> {
-  await cloudinary.uploader.destroy(publicId);
+export async function deleteAsset(
+  publicId: string,
+  resourceType: "image" | "raw" = "image"
+): Promise<void> {
+  await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
 }
 
 export { cloudinary };

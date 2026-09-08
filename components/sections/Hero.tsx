@@ -10,8 +10,8 @@ import {
   useTransform,
 } from "framer-motion";
 import { ArrowDown, ArrowUpRight, Copy, Check, Sparkles } from "lucide-react";
-import { stats, github } from "@/content/site";
 import type { HeroData, SocialLinkData } from "@/lib/data";
+import type { HeroStat } from "@/lib/schemas/site-copy";
 import { Button } from "@/components/ui/Button";
 import { Counter } from "@/components/ui/Counter";
 import { GithubIcon } from "@/components/icons";
@@ -95,9 +95,15 @@ function EmailCopy({ email }: { email: string }) {
 export function Hero({
   hero,
   socials,
+  stats,
+  repoCount,
 }: {
   hero: HeroData;
   socials: SocialLinkData[];
+  /** Stats strip under the hero (Admin → Site Copy). */
+  stats: HeroStat[];
+  /** Live public-repo count for the floating card. */
+  repoCount: number;
 }) {
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
@@ -252,9 +258,9 @@ export function Hero({
                 </span>
                 <div>
                   <p className="text-lg font-bold leading-none">
-                    <Counter value={stats[0].value} suffix={stats[0].suffix} />
+                    <Counter value={stats[0]?.value ?? 0} suffix={stats[0]?.suffix} />
                   </p>
-                  <p className="text-xs text-muted-foreground">Projects</p>
+                  <p className="text-xs text-muted-foreground">{stats[0]?.label ?? "Projects"}</p>
                 </div>
               </div>
             </motion.div>
@@ -270,7 +276,7 @@ export function Hero({
                 </span>
                 <div>
                   <p className="text-lg font-bold leading-none">
-                    <Counter value={github.stats[0].value} />
+                    <Counter value={repoCount} />
                   </p>
                   <p className="text-xs text-muted-foreground">Repositories</p>
                 </div>

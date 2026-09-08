@@ -14,7 +14,6 @@ export const siteSettingsSchema = z.object({
   logo: z.string().optional(),
   footerText: z.string().optional(),
   copyright: z.string().optional(),
-  resumeUrl: z.string().optional(),
   primaryColor: z.string().optional(),
   accentColor: z.string().optional(),
   /**

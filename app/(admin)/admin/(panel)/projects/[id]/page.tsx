@@ -28,7 +28,6 @@ export default async function EditProjectPage({
       ? (p.metrics as { label: string; value: string }[])
       : [],
     tech: p.tech,
-    category: p.category ?? "",
     year: p.year ?? "",
     featured: p.featured,
     status: p.status as "DRAFT" | "PUBLISHED",

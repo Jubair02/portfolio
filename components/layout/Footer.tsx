@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { nav, site } from "@/content/site";
+import Link from "next/link";
+import { site } from "@/content/site";
 import type { HeroData, SocialLinkData } from "@/lib/data";
 import { DataIcon, GithubIcon, LinkedinIcon } from "@/components/icons";
 import { isIconName } from "@/lib/icon-names";
@@ -29,6 +30,7 @@ export function Footer({
   footerText,
   copyright,
   logo,
+  nav,
 }: {
   hero: HeroData;
   socials: SocialLinkData[];
@@ -36,6 +38,8 @@ export function Footer({
   copyright?: string | null;
   /** Site Settings logo — replaces the initials monogram when uploaded. */
   logo?: string | null;
+  /** Admin → Site Copy → Navigation. */
+  nav: { label: string; href: string }[];
 }) {
   const year = new Date().getFullYear();
 
@@ -45,7 +49,7 @@ export function Footer({
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr] lg:gap-16">
           {/* Brand */}
           <div>
-            <a href="#top" className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               {logo ? (
                 <span className="grid size-10 place-items-center overflow-hidden rounded-xl bg-[color:var(--muted)] shadow-glow">
                   <Image
@@ -64,7 +68,7 @@ export function Footer({
               <span className="text-lg font-semibold tracking-tight">
                 {hero.name}
               </span>
-            </a>
+            </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
               {footerText ??
                 `${site.role} building fast, elegant products for the web. Open to freelance work and full-time roles.`}
@@ -92,7 +96,7 @@ export function Footer({
               {nav.map((item) => (
                 <li key={item.href}>
                   <a
-                    href={item.href}
+                    href={`/${item.href}`}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {item.label}

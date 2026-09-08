@@ -11,7 +11,9 @@ import {
   Activity,
   AlertTriangle,
 } from "lucide-react";
+import Link from "next/link";
 import { getDashboardStats, getRecentActivity } from "@/lib/dashboard";
+import { PurgeCacheButton } from "@/components/admin/PurgeCacheButton";
 import { StatCard } from "@/components/admin/StatCard";
 import { DashboardChart } from "@/components/admin/DashboardChart";
 import {
@@ -49,11 +51,14 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">
-          Overview of your portfolio content.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">
+            Overview of your portfolio content.
+          </p>
+        </div>
+        <PurgeCacheButton />
       </div>
 
       {!stats.dbConnected && (
@@ -101,10 +106,13 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
               <Activity className="size-4" /> Recent activity
             </CardTitle>
+            <Link href="/admin/activity" className="text-xs font-medium text-primary hover:underline">
+              View all
+            </Link>
           </CardHeader>
           <CardContent>
             {activity.length === 0 ? (
