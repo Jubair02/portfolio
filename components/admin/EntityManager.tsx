@@ -166,10 +166,10 @@ export function EntityManager({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-3">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3">
           {items.map((item, index) => (
-            <Card key={item.id}>
-              <CardContent className="flex items-center gap-4 py-4">
+            <Card key={item.id} className="min-w-0">
+              <CardContent className="flex items-center gap-3 py-4 sm:gap-4">
                 {reorder && (
                   <div className="flex shrink-0 flex-col">
                     <Button
@@ -211,7 +211,7 @@ export function EntityManager({
                     </p>
                   )}
                 </div>
-                <div className="flex gap-1">
+                <div className="flex shrink-0 gap-1">
                   <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => setDialog({ open: true, editing: item })}>
                     <Pencil className="size-4" />
                   </Button>

@@ -42,7 +42,7 @@ export function About({
                 className="aspect-[4/3] w-full object-cover object-top"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-              <div className="absolute bottom-5 left-5 right-5 flex items-end justify-between">
+              <div className="absolute bottom-5 left-5 right-5 flex flex-wrap items-end justify-between gap-2">
                 <div>
                   <p className="text-lg font-semibold text-white drop-shadow">
                     {hero.name}
@@ -51,7 +51,7 @@ export function About({
                     {hero.role}
                   </p>
                 </div>
-                <span className="glass rounded-full px-3 py-1.5 text-xs font-medium text-white">
+                <span className="glass shrink-0 rounded-full px-3 py-1.5 text-xs font-medium text-white">
                   {hero.location}
                 </span>
               </div>

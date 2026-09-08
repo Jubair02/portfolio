@@ -8,8 +8,10 @@ type Direction = "up" | "down" | "left" | "right" | "none";
 const offsets: Record<Direction, { x: number; y: number }> = {
   up: { x: 0, y: 28 },
   down: { x: 0, y: -28 },
-  left: { x: 28, y: 0 },
-  right: { x: -28, y: 0 },
+  // Horizontal offsets stay under the 20px mobile page padding so hidden,
+  // not-yet-revealed cards never add horizontal scroll.
+  left: { x: 16, y: 0 },
+  right: { x: -16, y: 0 },
   none: { x: 0, y: 0 },
 };
 

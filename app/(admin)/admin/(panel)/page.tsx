@@ -95,8 +95,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Chart + activity */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-3">
+        <Card className="min-w-0 lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-base">Content overview</CardTitle>
           </CardHeader>

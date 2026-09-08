@@ -50,7 +50,7 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
           )}
           <div className="relative flex items-center justify-between gap-3 p-5">
             <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="glass truncate rounded-full px-3 py-1 text-xs font-medium text-white">
+              <span className="glass max-w-full truncate rounded-full px-3 py-1 text-xs font-medium text-white">
                 {project.tagline}
               </span>
               {project.featured && (
@@ -60,7 +60,7 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
                 </span>
               )}
             </div>
-            <span className="font-mono text-xs text-white/85">
+            <span className="shrink-0 whitespace-nowrap font-mono text-xs text-white/85">
               {String(index + 1).padStart(2, "0")} · {project.year}
             </span>
           </div>

@@ -81,7 +81,7 @@ export function Contact({
           {/* Floating background shapes */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -inset-8 -z-10 overflow-hidden"
+            className="pointer-events-none absolute -inset-y-8 inset-x-0 -z-10 overflow-hidden"
           >
             <div className="animate-float absolute right-2 top-0 size-40 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--primary)_45%,transparent),transparent_70%)] opacity-40 blur-2xl" />
             <div className="animate-float-slow absolute -bottom-2 left-4 size-48 rounded-full bg-[radial-gradient(circle,color-mix(in_oklab,var(--accent-2)_40%,transparent),transparent_70%)] opacity-30 blur-2xl" />

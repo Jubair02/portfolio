@@ -30,7 +30,7 @@ export function Projects({
             href={githubUrl}
             target="_blank"
             rel="noreferrer noopener"
-            className="group inline-flex items-center gap-2 rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-5 py-2.5 text-sm font-medium transition-colors hover:border-[color:var(--primary)]/50"
+            className="group inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-5 py-2.5 text-sm font-medium transition-colors hover:border-[color:var(--primary)]/50"
           >
             <GithubIcon className="size-4" />
             View all on GitHub
