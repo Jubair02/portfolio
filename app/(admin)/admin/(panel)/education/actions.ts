@@ -1,6 +1,6 @@
 "use server";
 
-import { crudCreate, crudUpdate, crudDelete, type CrudConfig } from "@/lib/crud";
+import { crudCreate, crudUpdate, crudDelete, crudReorder, type CrudConfig } from "@/lib/crud";
 import { educationSchema, type EducationFormValues } from "@/lib/schemas/experience";
 
 const cfg: CrudConfig<EducationFormValues> = {
@@ -27,4 +27,8 @@ export async function updateEducation(id: string, values: Record<string, unknown
 }
 export async function deleteEducation(id: string) {
   return crudDelete(cfg, id);
+}
+/** `ids` in the new display order. */
+export async function reorderEducation(ids: string[]) {
+  return crudReorder(cfg, ids);
 }

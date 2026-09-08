@@ -87,7 +87,7 @@ export function SettingsForm({
                   <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "tags" && (
-                  <TagsInput value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />
+                  <TagsInput value={(values[f.name] as string[]) ?? []} variant={f.variant} onChange={(v) => set(f.name, v)} />
                 )}
                 {f.type === "switch" && (
                   <div className="pt-1">

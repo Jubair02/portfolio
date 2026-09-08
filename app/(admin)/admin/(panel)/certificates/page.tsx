@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/Field";
 import { EntityManager, type FieldConfig } from "@/components/admin/EntityManager";
-import { createCertificate, updateCertificate, deleteCertificate } from "./actions";
+import { createCertificate, updateCertificate, deleteCertificate, reorderCertificates } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,7 @@ export default async function CertificatesAdminPage() {
         create={createCertificate}
         update={updateCertificate}
         remove={deleteCertificate}
+        reorder={reorderCertificates}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/Field";
 import { EntityManager, type FieldConfig } from "@/components/admin/EntityManager";
-import { createSocial, updateSocial, deleteSocial } from "./actions";
+import { createSocial, updateSocial, deleteSocial, reorderSocials } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +56,7 @@ export default async function SocialAdminPage() {
         create={createSocial}
         update={updateSocial}
         remove={deleteSocial}
+        reorder={reorderSocials}
       />
     </div>
   );

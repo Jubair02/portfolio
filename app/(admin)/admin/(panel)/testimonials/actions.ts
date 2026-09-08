@@ -1,6 +1,6 @@
 "use server";
 
-import { crudCreate, crudUpdate, crudDelete, type CrudConfig } from "@/lib/crud";
+import { crudCreate, crudUpdate, crudDelete, crudReorder, type CrudConfig } from "@/lib/crud";
 import { testimonialSchema, type TestimonialFormValues } from "@/lib/schemas/collections";
 
 const cfg: CrudConfig<TestimonialFormValues> = {
@@ -28,4 +28,8 @@ export async function updateTestimonial(id: string, values: Record<string, unkno
 }
 export async function deleteTestimonial(id: string) {
   return crudDelete(cfg, id);
+}
+/** `ids` in the new display order. */
+export async function reorderTestimonials(ids: string[]) {
+  return crudReorder(cfg, ids);
 }

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/Field";
 import { EntityManager, type FieldConfig } from "@/components/admin/EntityManager";
-import { createService, updateService, deleteService } from "./actions";
+import { createService, updateService, deleteService, reorderServices } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ const fields: FieldConfig[] = [
   { name: "title", label: "Title", type: "text" },
   { name: "icon", label: "Icon", type: "icon", defaultValue: "Server" },
   { name: "description", label: "Description", type: "textarea" },
-  { name: "features", label: "Features", type: "tags", hint: "Press Enter after each." },
+  { name: "features", label: "Features", type: "tags", variant: "line", hint: "One feature per line — press Enter after each." },
 ];
 
 async function getItems() {
@@ -42,6 +42,7 @@ export default async function ServicesAdminPage() {
         create={createService}
         update={updateService}
         remove={deleteService}
+        reorder={reorderServices}
       />
     </div>
   );

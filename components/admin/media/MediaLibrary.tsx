@@ -112,7 +112,7 @@ export function MediaLibrary({ assets }: { assets: Asset[] }) {
                   </Button>
                   <ConfirmDialog
                     title="Delete this image?"
-                    description="It will be removed from Cloudinary and the library."
+                    description="It will be removed from Cloudinary and the library. Images still used by your content are protected and cannot be deleted until they are replaced there."
                     onConfirm={async () => {
                       const res = await deleteImageAction(a.publicId);
                       if (res.error) return { ok: false, error: res.error };

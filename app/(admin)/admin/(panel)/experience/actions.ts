@@ -1,6 +1,6 @@
 "use server";
 
-import { crudCreate, crudUpdate, crudDelete, type CrudConfig } from "@/lib/crud";
+import { crudCreate, crudUpdate, crudDelete, crudReorder, type CrudConfig } from "@/lib/crud";
 import { experienceSchema, type ExperienceFormValues } from "@/lib/schemas/experience";
 
 const cfg: CrudConfig<ExperienceFormValues> = {
@@ -30,4 +30,8 @@ export async function updateExperience(id: string, values: Record<string, unknow
 }
 export async function deleteExperience(id: string) {
   return crudDelete(cfg, id);
+}
+/** `ids` in the new display order. */
+export async function reorderExperience(ids: string[]) {
+  return crudReorder(cfg, ids);
 }

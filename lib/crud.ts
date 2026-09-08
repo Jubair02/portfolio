@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import type { ZodType } from "zod";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { adminGuard, type ActionResult } from "@/lib/auth-guard";
 import { FIX_FIELDS_MESSAGE, toFieldErrors } from "@/lib/form-errors";
@@ -10,6 +11,7 @@ type Delegate = {
   update(args: { where: { id: string }; data: Record<string, unknown> }): Promise<{ id: string }>;
   delete(args: { where: { id: string } }): Promise<unknown>;
   count(args?: unknown): Promise<number>;
+  findMany(args?: unknown): Promise<{ id: string; order: number }[]>;
 };
 
 export type CrudConfig<T> = {
@@ -47,7 +49,14 @@ export async function crudCreate<T>(
     };
   try {
     const delegate = delegateFor(cfg.model);
-    const order = await delegate.count();
+    // Append after the current last item. Using count() here handed out
+    // duplicate positions once anything had been deleted.
+    const [last] = await delegate.findMany({
+      orderBy: { order: "desc" },
+      take: 1,
+      select: { id: true, order: true },
+    });
+    const order = (last?.order ?? -1) + 1;
     await delegate.create({ data: { ...cfg.toData(parsed.data), order } });
     const label = cfg.labelField ? String(parsed.data[cfg.labelField]) : undefined;
     await logActivity("created", cfg.entity, label);
@@ -82,6 +91,33 @@ export async function crudUpdate<T>(
   } catch (err) {
     console.error(`[${cfg.entity}] update failed:`, err);
     return { ok: false, error: `Could not update ${cfg.entity}.` };
+  }
+}
+
+/**
+ * Persist a new display order: `ids` is the full list in its new sequence and
+ * each row's `order` becomes its index. One transaction, so a failure halfway
+ * cannot leave two items claiming the same slot.
+ */
+export async function crudReorder<T>(cfg: CrudConfig<T>, ids: string[]): Promise<ActionResult> {
+  const denied = await adminGuard();
+  if (denied) return denied;
+  if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || !id)) {
+    return { ok: false, error: "Invalid order." };
+  }
+  try {
+    const delegate = delegateFor(cfg.model);
+    await prisma.$transaction(
+      ids.map(
+        (id, i) =>
+          delegate.update({ where: { id }, data: { order: i } }) as unknown as Prisma.PrismaPromise<unknown>
+      )
+    );
+    revalidate(cfg);
+    return { ok: true };
+  } catch (err) {
+    console.error(`[${cfg.entity}] reorder failed:`, err);
+    return { ok: false, error: `Could not reorder ${cfg.entity}s.` };
   }
 }
 

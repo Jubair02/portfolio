@@ -5,6 +5,7 @@ import {
   createExperience,
   updateExperience,
   deleteExperience,
+  reorderExperience,
 } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ const fields: FieldConfig[] = [
   { name: "icon", label: "Icon", type: "icon", defaultValue: "Briefcase" },
   { name: "logo", label: "Company logo", type: "image", folder: "portfolio/experience" },
   { name: "description", label: "Description", type: "textarea" },
-  { name: "highlights", label: "Highlights", type: "tags", hint: "Press Enter after each point." },
+  { name: "highlights", label: "Highlights", type: "tags", variant: "line", hint: "One point per line — press Enter after each." },
   { name: "tags", label: "Tags / skills", type: "tags" },
 ];
 
@@ -56,6 +57,7 @@ export default async function ExperienceAdminPage() {
         create={createExperience}
         update={updateExperience}
         remove={deleteExperience}
+        reorder={reorderExperience}
       />
     </div>
   );

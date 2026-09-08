@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/Field";
 import { EntityManager, type FieldConfig } from "@/components/admin/EntityManager";
-import { createEducation, updateEducation, deleteEducation } from "./actions";
+import { createEducation, updateEducation, deleteEducation, reorderEducation } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +46,7 @@ export default async function EducationAdminPage() {
         create={createEducation}
         update={updateEducation}
         remove={deleteEducation}
+        reorder={reorderEducation}
       />
     </div>
   );

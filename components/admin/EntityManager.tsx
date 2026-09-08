@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Pencil, Plus, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Loader2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import type { ActionResult } from "@/lib/auth-guard";
 import { runAction, toastActionError } from "@/components/admin/action-feedback";
@@ -53,6 +53,8 @@ export type FieldConfig = {
   folder?: string;
   options?: { label: string; value: string }[];
   optional?: boolean; // icon fields only: allow clearing the value
+  /** tags fields only: "line" for full sentences (commas don't split), default "tag" */
+  variant?: "tag" | "line";
   full?: boolean; // span both columns
   defaultValue?: unknown;
 };
@@ -110,6 +112,7 @@ export function EntityManager({
   create,
   update,
   remove,
+  reorder,
   addLabel = "Add item",
   emptyLabel = "Nothing here yet. Add your first item.",
 }: {
@@ -122,11 +125,28 @@ export function EntityManager({
   create: (values: Record<string, unknown>) => Promise<ActionResult>;
   update: (id: string, values: Record<string, unknown>) => Promise<ActionResult>;
   remove: (id: string) => Promise<ActionResult>;
+  /** Receives every id in its new display order. Enables the up/down controls. */
+  reorder?: (ids: string[]) => Promise<ActionResult>;
   addLabel?: string;
   emptyLabel?: string;
 }) {
   const router = useRouter();
   const [dialog, setDialog] = useState<{ open: boolean; editing?: EntityItem }>({ open: false });
+  const [reordering, startReorder] = useTransition();
+
+  /** Swap the item at `index` with its neighbour and persist the whole order. */
+  function move(index: number, delta: -1 | 1) {
+    if (!reorder) return;
+    const target = index + delta;
+    if (target < 0 || target >= items.length) return;
+    const ids = items.map((i) => i.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    startReorder(async () => {
+      const res = await runAction(() => reorder(ids));
+      if (res.ok) router.refresh();
+      else toastActionError(res);
+    });
+  }
 
   return (
     <div className="space-y-4">
@@ -144,9 +164,33 @@ export function EntityManager({
         </Card>
       ) : (
         <div className="grid gap-3">
-          {items.map((item) => (
+          {items.map((item, index) => (
             <Card key={item.id}>
               <CardContent className="flex items-center gap-4 py-4">
+                {reorder && (
+                  <div className="flex shrink-0 flex-col">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6"
+                      aria-label="Move up"
+                      disabled={reordering || index === 0}
+                      onClick={() => move(index, -1)}
+                    >
+                      <ChevronUp className="size-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6"
+                      aria-label="Move down"
+                      disabled={reordering || index === items.length - 1}
+                      onClick={() => move(index, 1)}
+                    >
+                      <ChevronDown className="size-4" />
+                    </Button>
+                  </div>
+                )}
                 {imageKey && item[imageKey] ? (
                   <div className="relative size-12 shrink-0 overflow-hidden rounded-lg bg-muted">
                     <Image src={String(item[imageKey])} alt="" fill className="object-cover" unoptimized />
@@ -270,7 +314,7 @@ function EntityDialog({
                   <Textarea id={f.name} aria-invalid={Boolean(errors[f.name])} rows={3} value={String(values[f.name] ?? "")} placeholder={f.placeholder} onChange={(e) => set(f.name, e.target.value)} />
                 )}
                 {f.type === "tags" && (
-                  <TagsInput value={(values[f.name] as string[]) ?? []} onChange={(v) => set(f.name, v)} />
+                  <TagsInput value={(values[f.name] as string[]) ?? []} variant={f.variant} onChange={(v) => set(f.name, v)} />
                 )}
                 {f.type === "switch" && (
                   <div className="pt-1">

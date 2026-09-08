@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/admin/Field";
 import { EntityManager, type FieldConfig } from "@/components/admin/EntityManager";
-import { createTestimonial, updateTestimonial, deleteTestimonial } from "./actions";
+import { createTestimonial, updateTestimonial, deleteTestimonial, reorderTestimonials } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +48,7 @@ export default async function TestimonialsAdminPage() {
         create={createTestimonial}
         update={updateTestimonial}
         remove={deleteTestimonial}
+        reorder={reorderTestimonials}
       />
     </div>
   );

@@ -3,8 +3,11 @@ import "./globals.css";
 import { geistSans, geistMono } from "@/lib/fonts";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { NotFoundPage } from "@/components/ui/404-page-not-found";
+import { site } from "@/content/site";
 
 export const metadata: Metadata = {
+  // Renders outside both root layouts, so it needs its own base for the OG image URL.
+  metadataBase: new URL(site.url),
   title: "404 — Page not found",
   robots: { index: false, follow: false },
 };
