@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
+import { useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,19 @@ import { cn } from "@/lib/utils";
  * `variant="line"` — full sentences (experience highlights, service features).
  * Commas are ordinary punctuation there, so only Enter commits and each entry
  * is rendered as its own row instead of a chip.
+ *
+ * Pasting is split the same way, which is how lists such as
+ * "React, Node.js, TypeScript" used to end up saved as one long tag.
  */
+
+/** Split committed or pasted text into entries, honouring the variant. */
+function splitEntries(text: string, line: boolean): string[] {
+  return text
+    .split(line ? /\n+/ : /[,\n]+/)
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
 export function TagsInput({
   value,
   onChange,
@@ -31,9 +43,19 @@ export function TagsInput({
     placeholder ?? (line ? "Write a line and press Enter…" : "Type and press Enter…");
 
   function add(entry: string) {
-    const t = entry.trim();
-    if (t && !value.includes(t)) onChange([...value, t]);
+    const next = [...value];
+    for (const t of splitEntries(entry, line)) if (!next.includes(t)) next.push(t);
+    if (next.length !== value.length) onChange(next);
     setDraft("");
+  }
+
+  function onPaste(e: ClipboardEvent<HTMLInputElement>) {
+    const pasted = e.clipboardData.getData("text");
+    // A single clean entry stays in the draft so it can still be edited;
+    // anything that splits into several is committed straight away.
+    if (splitEntries(pasted, line).length < 2) return;
+    e.preventDefault();
+    add(draft + pasted);
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
@@ -50,6 +72,7 @@ export function TagsInput({
       value={draft}
       onChange={(e) => setDraft(e.target.value)}
       onKeyDown={onKeyDown}
+      onPaste={onPaste}
       onBlur={() => draft && add(draft)}
       placeholder={line || value.length === 0 ? hint : ""}
       className={cn(
