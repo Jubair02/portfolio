@@ -35,7 +35,7 @@ function toData(v: ProjectFormValues): Prisma.ProjectUncheckedCreateInput {
 function revalidateAll() {
   revalidatePath("/admin/projects");
   revalidatePath("/"); // landing page (featured)
-  revalidatePath("/projects"); // full catalogue
+  revalidatePath("/projects", "layout"); // catalogue + every project page
 }
 
 export async function createProject(values: ProjectFormValues): Promise<ActionResult> {

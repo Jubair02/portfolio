@@ -10,6 +10,7 @@
  * Treating "empty" as "unavailable" made it impossible to clear a section from
  * the admin: deleting every row simply resurrected the static placeholders.
  */
+import type { Project as ProjectRecord } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   projects as staticProjects,
@@ -425,6 +426,42 @@ export async function getSocialLinks(): Promise<SocialLinkData[]> {
   }
 }
 
+/** Database row → the shape the public components render. */
+function toProject(p: ProjectRecord): Project {
+  return {
+    slug: p.slug,
+    title: p.title,
+    tagline: p.tagline,
+    description: p.description,
+    caseStudy: p.caseStudy ?? "",
+    tech: p.tech,
+    year: p.year ?? "",
+    featured: p.featured,
+    gradient: p.gradient ?? "from-primary via-accent-2 to-accent",
+    image: p.image ?? undefined,
+    screenshots: p.screenshots,
+    icon: (p.icon as IconName) ?? "Sparkles",
+    links: {
+      demo: p.liveUrl ?? undefined,
+      github: p.githubUrl ?? undefined,
+    },
+    metrics:
+      Array.isArray(p.metrics) && p.metrics.length > 0
+        ? (p.metrics as unknown as Metric[])
+        : undefined,
+  };
+}
+
+/** One published project by slug, or null. Drafts are invisible to the public. */
+export async function getProject(slug: string): Promise<Project | null> {
+  try {
+    const row = await prisma.project.findFirst({ where: { slug, status: "PUBLISHED" } });
+    return row ? toProject(row) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Published projects for the public site, DB-first with static fallback. */
 export async function getProjects(): Promise<Project[]> {
   try {
@@ -433,27 +470,7 @@ export async function getProjects(): Promise<Project[]> {
       orderBy: [{ order: "asc" }, { createdAt: "desc" }],
     });
 
-    return rows.map((p) => ({
-      title: p.title,
-      tagline: p.tagline,
-      description: p.description,
-      caseStudy: p.caseStudy ?? "",
-      tech: p.tech,
-      year: p.year ?? "",
-      featured: p.featured,
-      gradient: p.gradient ?? "from-primary via-accent-2 to-accent",
-      image: p.image ?? undefined,
-      screenshots: p.screenshots,
-      icon: (p.icon as IconName) ?? "Sparkles",
-      links: {
-        demo: p.liveUrl ?? undefined,
-        github: p.githubUrl ?? undefined,
-      },
-      metrics:
-        Array.isArray(p.metrics) && p.metrics.length > 0
-          ? (p.metrics as unknown as Metric[])
-          : undefined,
-    }));
+    return rows.map(toProject);
   } catch (err) {
     console.warn(
       "[data] getProjects: DB unavailable, using static fallback.",

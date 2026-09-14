@@ -10,8 +10,8 @@ import {
   siteCopySchema,
   SECTION_KEYS,
   SECTION_LABELS,
-  SECTION_ANCHORS,
-  ANCHOR_LABELS,
+  NAV_TARGETS,
+  NAV_TARGET_LABELS,
   type SiteCopyFormValues,
 } from "@/lib/schemas/site-copy";
 import {
@@ -145,7 +145,7 @@ export function SiteCopyForm({ initial }: { initial: SiteCopyFormValues }) {
             <CardTitle className="text-base">Navigation</CardTitle>
             <CardDescription>
               Links in the header, the mobile menu, the footer and the 404 page, in this
-              order. Each one scrolls to a section of the home page.
+              order. Each one scrolls to a section of the home page, or opens a page.
             </CardDescription>
           </div>
           <Button
@@ -180,9 +180,9 @@ export function SiteCopyForm({ initial }: { initial: SiteCopyFormValues }) {
                           <SelectValue placeholder="Pick a section" />
                         </SelectTrigger>
                         <SelectContent>
-                          {SECTION_ANCHORS.map((a) => (
+                          {NAV_TARGETS.map((a) => (
                             <SelectItem key={a} value={a}>
-                              {ANCHOR_LABELS[a]}{" "}
+                              {NAV_TARGET_LABELS[a]}{" "}
                               <span className="text-muted-foreground">{a}</span>
                             </SelectItem>
                           ))}

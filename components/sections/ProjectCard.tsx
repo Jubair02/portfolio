@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpRight, ChevronDown, Star } from "lucide-react";
+import { ArrowUpRight, ArrowRight, ChevronDown, Star } from "lucide-react";
 import type { Project } from "@/content/site";
 import { TiltCard } from "@/components/ui/TiltCard";
 import { DataIcon, GithubIcon } from "@/components/icons";
@@ -11,6 +12,10 @@ import { cn } from "@/lib/utils";
 
 export function ProjectCard({ project, index }: { project: Project; index: number }) {
   const [open, setOpen] = useState(false);
+  // Projects read from the database have a slug and therefore a page of their
+  // own. The static fallback (used only when the DB is unreachable) has none,
+  // so those cards keep the older inline case-study expander.
+  const detailHref = project.slug ? `/projects/${project.slug}` : null;
 
   return (
     <TiltCard max={5} className="group h-full rounded-3xl">
@@ -61,12 +66,22 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
               )}
             </div>
             <span className="shrink-0 whitespace-nowrap font-mono text-xs text-white/85">
-              {String(index + 1).padStart(2, "0")} · {project.year}
+              {String(index + 1).padStart(2, "0")}
+              {project.year ? ` · ${project.year}` : ""}
             </span>
           </div>
           <div className="absolute bottom-0 left-0 p-5">
             <h3 className="text-2xl font-semibold tracking-tight text-white drop-shadow-sm">
-              {project.title}
+              {detailHref ? (
+                <Link
+                  href={detailHref}
+                  className="rounded-sm transition-colors hover:text-white/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+                >
+                  {project.title}
+                </Link>
+              ) : (
+                project.title
+              )}
             </h3>
           </div>
         </div>
@@ -77,67 +92,62 @@ export function ProjectCard({ project, index }: { project: Project; index: numbe
             {project.description}
           </p>
 
-          {/* Case study preview */}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            aria-expanded={open}
-            className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-foreground"
-          >
-            {open ? "Hide case study" : "Read the case study"}
-            <ChevronDown
-              className={cn(
-                "size-4 transition-transform duration-300",
-                open && "rotate-180"
-              )}
-            />
-          </button>
-          <AnimatePresence initial={false}>
-            {open && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="overflow-hidden"
+          {detailHref ? (
+            /* The full write-up, metrics and screenshots live on the project page. */
+            <Link
+              href={detailHref}
+              className="group/more mt-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-foreground"
+            >
+              View project
+              <ArrowRight className="size-4 transition-transform duration-300 group-hover/more:translate-x-0.5" />
+            </Link>
+          ) : (
+            <>
+              {/* Case study preview (static fallback only) */}
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                className="mt-3 inline-flex w-fit items-center gap-1 text-sm font-medium text-primary transition-colors hover:text-foreground"
               >
-                <p className="mt-3 rounded-2xl bg-[color:var(--muted)]/50 p-4 text-sm leading-relaxed text-muted-foreground">
-                  {project.caseStudy}
-                </p>
-                {project.screenshots && project.screenshots.length > 0 && (
-                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-                    {project.screenshots.map((src, i) => (
-                      <a
-                        key={src}
-                        href={src}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        aria-label={`${project.title} screenshot ${i + 1} (opens full size)`}
-                        className="relative h-16 w-28 shrink-0 overflow-hidden rounded-lg border border-[color:var(--border)] transition-transform hover:scale-[1.03]"
-                      >
-                        <Image src={src} alt="" fill sizes="7rem" className="object-cover" />
-                      </a>
-                    ))}
-                  </div>
-                )}
-                {project.metrics && (
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    {project.metrics.map((m) => (
-                      <div
-                        key={m.label}
-                        className="rounded-xl border border-[color:var(--border)] px-3 py-2"
-                      >
-                        <p className="text-xs text-muted-foreground">
-                          {m.label}
-                        </p>
-                        <p className="text-sm font-semibold">{m.value}</p>
+                {open ? "Hide case study" : "Read the case study"}
+                <ChevronDown
+                  className={cn(
+                    "size-4 transition-transform duration-300",
+                    open && "rotate-180"
+                  )}
+                />
+              </button>
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <p className="mt-3 rounded-2xl bg-[color:var(--muted)]/50 p-4 text-sm leading-relaxed text-muted-foreground">
+                      {project.caseStudy}
+                    </p>
+                    {project.metrics && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        {project.metrics.map((m) => (
+                          <div
+                            key={m.label}
+                            className="rounded-xl border border-[color:var(--border)] px-3 py-2"
+                          >
+                            <p className="text-xs text-muted-foreground">{m.label}</p>
+                            <p className="text-sm font-semibold">{m.value}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </motion.div>
                 )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </AnimatePresence>
+            </>
+          )}
 
           {/* Tech */}
           <div className="mt-5 flex flex-wrap gap-2">

@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/lib/site-url";
-import { getPosts } from "@/lib/data";
+import { getPosts, getProjects } from "@/lib/data";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [url, posts] = await Promise.all([getSiteUrl(), getPosts()]);
+  const [url, posts, projects] = await Promise.all([getSiteUrl(), getPosts(), getProjects()]);
   return [
     {
       url,
@@ -19,6 +19,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    ...projects
+      .filter((p) => p.slug)
+      .map((p) => ({
+        url: `${url}/projects/${p.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "monthly" as const,
+        priority: 0.6,
+      })),
     // Only posts with their own page; link-only posts point elsewhere.
     ...posts
       .filter((p) => !p.externalUrl || p.content.trim())

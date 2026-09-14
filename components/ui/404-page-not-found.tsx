@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Compass, Home } from "lucide-react";
 import { site } from "@/content/site";
 import { Button } from "@/components/ui/Button";
+import { navHref } from "@/lib/nav";
 
 /**
  * On-brand 404. Uses the site's design tokens (so it follows light/dark) and
@@ -71,7 +72,7 @@ export function NotFoundPage({ nav }: { nav: { label: string; href: string }[] }
           {nav.map((item) => (
             <Link
               key={item.href}
-              href={`/${item.href}`}
+              href={navHref(item.href)}
               className="text-muted-foreground transition-colors hover:text-foreground"
             >
               {item.label}

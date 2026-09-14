@@ -92,9 +92,23 @@ export const ANCHOR_LABELS: Record<SectionAnchor, string> = {
   "#contact": "Contact",
 };
 
+/** Real routes a nav item may point at, alongside the on-page sections. */
+export const PAGE_ROUTES = ["/projects"] as const;
+export type PageRoute = (typeof PAGE_ROUTES)[number];
+
+export type NavTarget = SectionAnchor | PageRoute;
+
+/** Everything the nav picker offers, sections first. */
+export const NAV_TARGETS = [...SECTION_ANCHORS, ...PAGE_ROUTES] as [NavTarget, ...NavTarget[]];
+
+export const NAV_TARGET_LABELS: Record<NavTarget, string> = {
+  ...ANCHOR_LABELS,
+  "/projects": "All projects (page)",
+};
+
 export const navItemSchema = z.object({
   label: required("Label").pipe(z.string().max(24, "Keep labels short.")),
-  href: z.enum(SECTION_ANCHORS, { message: "Pick a section." }),
+  href: z.enum(NAV_TARGETS, { message: "Pick a section or page." }),
 });
 export type NavItem = z.infer<typeof navItemSchema>;
 

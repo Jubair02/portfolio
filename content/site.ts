@@ -161,6 +161,8 @@ export const techMarquee = [
 /* Featured projects — grounded in real GitHub repositories                   */
 /* -------------------------------------------------------------------------- */
 export type Project = {
+  /** URL segment for /projects/<slug>. Absent in the static fallback. */
+  slug?: string;
   title: string;
   tagline: string;
   description: string;

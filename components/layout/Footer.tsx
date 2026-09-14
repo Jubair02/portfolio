@@ -4,6 +4,7 @@ import { site } from "@/content/site";
 import type { HeroData, SocialLinkData } from "@/lib/data";
 import { DataIcon, GithubIcon, LinkedinIcon } from "@/components/icons";
 import { isIconName } from "@/lib/icon-names";
+import { navHref } from "@/lib/nav";
 import { Mail, Phone, Globe } from "lucide-react";
 
 function PlatformIcon({
@@ -96,7 +97,7 @@ export function Footer({
               {nav.map((item) => (
                 <li key={item.href}>
                   <a
-                    href={`/${item.href}`}
+                    href={navHref(item.href)}
                     className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     {item.label}

@@ -4,17 +4,32 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { getProjects, getSiteCopy } from "@/lib/data";
 import { getGitHubProfile } from "@/lib/github";
 import { Eyebrow } from "@/components/ui/Section";
-import { Reveal } from "@/components/ui/Reveal";
-import { ProjectCard } from "@/components/sections/ProjectCard";
+import { ProjectsExplorer } from "@/components/sections/ProjectsExplorer";
 import { GithubIcon } from "@/components/icons";
 
 // Same cadence as the home page; project saves also revalidate this path.
 export const revalidate = 60;
 
+const DESCRIPTION =
+  "Every published project — responsive front-ends, full-stack apps and .NET APIs, with the build notes behind each one.";
+
 export const metadata: Metadata = {
   title: "Projects",
-  description: "Every published project — front-ends, full-stack apps and .NET APIs.",
+  description: DESCRIPTION,
   alternates: { canonical: "/projects" },
+  // Without its own block the page would inherit the home page's Open Graph
+  // tags, so a shared /projects link previewed as the home page.
+  openGraph: {
+    type: "website",
+    title: "Projects",
+    description: DESCRIPTION,
+    url: "/projects",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Projects",
+    description: DESCRIPTION,
+  },
 };
 
 /**
@@ -62,15 +77,7 @@ export default async function ProjectsPage() {
         </a>
       </header>
 
-      {projects.length > 0 && (
-        <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[repeat(2,minmax(0,1fr))] xl:grid-cols-[repeat(3,minmax(0,1fr))]">
-          {projects.map((project, i) => (
-            <Reveal key={project.title} delay={0.05 * (i % 3)} amount={0.15} className="min-w-0">
-              <ProjectCard project={project} index={i} />
-            </Reveal>
-          ))}
-        </div>
-      )}
+      {projects.length > 0 && <ProjectsExplorer projects={projects} />}
     </div>
   );
 }

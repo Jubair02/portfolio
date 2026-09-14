@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -9,6 +11,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { Button } from "@/components/ui/Button";
 import { PlatformIcon, SocialIcons } from "@/components/ui/SocialIcons";
 import { smoothScrollTo, useLenis } from "@/components/providers/SmoothScroll";
+import { isSectionAnchor, navHref } from "@/lib/nav";
 
 
 export function Navbar({
@@ -22,7 +25,12 @@ export function Navbar({
   nav: { label: string; href: string }[];
 }) {
   const lenis = useLenis();
-  const sectionIds = useMemo(() => nav.map((n) => n.href.replace("#", "")), [nav]);
+  const pathname = usePathname();
+  // Only on-page anchors are observed; page routes have no element to spy on.
+  const sectionIds = useMemo(
+    () => nav.filter((n) => isSectionAnchor(n.href)).map((n) => n.href.slice(1)),
+    [nav]
+  );
   // The condensed bar has room for a single icon: prefer GitHub, else the
   // first link the admin has marked visible.
   const primarySocial =
@@ -163,29 +171,46 @@ export function Navbar({
         {/* Desktop links */}
         <ul className="hidden items-center gap-1 lg:flex">
           {nav.map((item) => {
-            const isActive = active === item.href.replace("#", "");
+            const section = isSectionAnchor(item.href);
+            const isActive = section
+              ? pathname === "/" && active === item.href.slice(1)
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const linkClass = cn(
+              "group/navlink relative rounded-full px-4 py-2 text-sm font-medium transition-colors",
+              isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            );
+            const inner = (
+              <>
+                {isActive && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 -z-10 rounded-full bg-[color:var(--muted)]"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+                {item.label}
+                <span className="absolute inset-x-4 bottom-1 h-px origin-left scale-x-0 rounded-full bg-gradient-to-r from-primary to-accent-2 transition-transform duration-300 group-hover/navlink:scale-x-100" />
+              </>
+            );
             return (
               <li key={item.href}>
-                <a
-                  href={`/${item.href}`}
-                  aria-current={isActive ? "true" : undefined}
-                  className={cn(
-                    "group/navlink relative rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-pill"
-                      className="absolute inset-0 -z-10 rounded-full bg-[color:var(--muted)]"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    />
-                  )}
-                  {item.label}
-                  <span className="absolute inset-x-4 bottom-1 h-px origin-left scale-x-0 rounded-full bg-gradient-to-r from-primary to-accent-2 transition-transform duration-300 group-hover/navlink:scale-x-100" />
-                </a>
+                {section ? (
+                  <a
+                    href={navHref(item.href)}
+                    aria-current={isActive ? "true" : undefined}
+                    className={linkClass}
+                  >
+                    {inner}
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={linkClass}
+                  >
+                    {inner}
+                  </Link>
+                )}
               </li>
             );
           })}
@@ -253,25 +278,44 @@ export function Navbar({
               className="relative mx-3 mt-20 rounded-3xl border border-[color:var(--border)] bg-card p-6 shadow-glow-lg"
             >
               <ul className="flex flex-col gap-1">
-                {nav.map((item, i) => (
-                  <motion.li
-                    key={item.href}
-                    initial={{ opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.06 * i + 0.05 }}
-                  >
-                    <a
-                      href={`/${item.href}`}
-                      onClick={() => setOpen(false)}
-                      className="flex items-center justify-between rounded-2xl px-4 py-3.5 text-lg font-medium text-foreground/90 transition-colors hover:bg-[color:var(--muted)] hover:text-foreground"
-                    >
+                {nav.map((item, i) => {
+                  const itemClass =
+                    "flex items-center justify-between rounded-2xl px-4 py-3.5 text-lg font-medium text-foreground/90 transition-colors hover:bg-[color:var(--muted)] hover:text-foreground";
+                  const inner = (
+                    <>
                       <span>{item.label}</span>
                       <span className="text-xs font-mono text-muted-foreground">
                         0{i + 1}
                       </span>
-                    </a>
-                  </motion.li>
-                ))}
+                    </>
+                  );
+                  return (
+                    <motion.li
+                      key={item.href}
+                      initial={{ opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.06 * i + 0.05 }}
+                    >
+                      {isSectionAnchor(item.href) ? (
+                        <a
+                          href={navHref(item.href)}
+                          onClick={() => setOpen(false)}
+                          className={itemClass}
+                        >
+                          {inner}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          onClick={() => setOpen(false)}
+                          className={itemClass}
+                        >
+                          {inner}
+                        </Link>
+                      )}
+                    </motion.li>
+                  );
+                })}
               </ul>
 
               <div className="mt-5 flex items-center justify-between border-t border-[color:var(--border)] pt-5">
