@@ -295,7 +295,7 @@ export function ProjectForm({
               <CardTitle className="text-base">Publishing</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Field label="Status">
+              <Field label="Status" hint="Only published projects are visible on the site.">
                 <Controller
                   control={control}
                   name="status"
@@ -314,7 +314,10 @@ export function ProjectForm({
               </Field>
 
               <div className="flex items-center justify-between">
-                <Label htmlFor="featured">Featured</Label>
+                <div>
+                  <Label htmlFor="featured">Featured</Label>
+                  <p className="text-xs text-muted-foreground">Shown on the home page. Every published project is listed on /projects.</p>
+                </div>
                 <Controller
                   control={control}
                   name="featured"

@@ -21,14 +21,22 @@ export function ConfirmDialog({
   description = "This action cannot be undone.",
   confirmLabel = "Delete",
   onConfirm,
+  open: controlledOpen,
+  onOpenChange,
 }: {
-  trigger: ReactNode;
+  /** Omit when driving the dialog from outside — e.g. an item in a menu that
+   *  must close before the dialog mounts, or the two fight over focus. */
+  trigger?: ReactNode;
   title?: string;
   description?: string;
   confirmLabel?: string;
   onConfirm: () => Promise<{ ok: boolean; error?: string }>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
   const [pending, start] = useTransition();
 
   function confirm() {
@@ -45,7 +53,7 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

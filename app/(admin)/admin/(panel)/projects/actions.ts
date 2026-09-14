@@ -34,7 +34,8 @@ function toData(v: ProjectFormValues): Prisma.ProjectUncheckedCreateInput {
 
 function revalidateAll() {
   revalidatePath("/admin/projects");
-  revalidatePath("/"); // public site
+  revalidatePath("/"); // landing page (featured)
+  revalidatePath("/projects"); // full catalogue
 }
 
 export async function createProject(values: ProjectFormValues): Promise<ActionResult> {
@@ -114,6 +115,27 @@ export async function toggleFeatured(id: string, featured: boolean): Promise<Act
   if (denied) return denied;
   try {
     await prisma.project.update({ where: { id }, data: { featured } });
+    revalidateAll();
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Could not update." };
+  }
+}
+
+export async function toggleStatus(
+  id: string,
+  status: "DRAFT" | "PUBLISHED"
+): Promise<ActionResult> {
+  const denied = await adminGuard();
+  if (denied) return denied;
+  try {
+    const updated = await prisma.project.update({ where: { id }, data: { status } });
+    await logActivity(
+      status === "PUBLISHED" ? "published" : "unpublished",
+      "project",
+      updated.title,
+      id
+    );
     revalidateAll();
     return { ok: true };
   } catch {

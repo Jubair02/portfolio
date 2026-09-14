@@ -111,7 +111,12 @@ export default async function Home() {
       <Hero hero={hero} socials={socials} stats={copy.heroStats} repoCount={github.repoCount} />
       <About about={about} hero={hero} resumeUrl={hero.resumeUrl} note={copy.aboutNote} />
       <Skills categories={skills} heading={sections.skills} marquee={copy.techMarquee} />
-      <Projects projects={projects} heading={sections.projects} githubUrl={github.url} />
+      <Projects
+        projects={projects.filter((p) => p.featured)}
+        totalPublished={projects.length}
+        heading={sections.projects}
+        githubUrl={github.url}
+      />
       <Experience experience={experience} education={education} heading={sections.experience} />
       <Services services={services} heading={sections.services} />
       <Certifications
