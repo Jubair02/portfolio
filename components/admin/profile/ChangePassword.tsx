@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { signOut } from "next-auth/react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { changePassword } from "@/app/(admin)/admin/(panel)/profile/actions";
@@ -26,10 +27,16 @@ export function ChangePassword() {
         changePassword({ currentPassword: current, newPassword: next })
       );
       if (res.ok) {
-        toast.success("Password changed.");
         setCurrent("");
         setNext("");
         setConfirm("");
+        // Changing the password revokes every session issued before it, this
+        // one included. Say so and sign out on purpose, rather than letting
+        // the next navigation bounce to the login page unexplained.
+        toast.success("Password changed — signing you out.", {
+          description: "Every other device is signed out too. Sign in again with your new password.",
+        });
+        setTimeout(() => signOut({ callbackUrl: "/admin/login" }), 1500);
       } else {
         toastActionError(res);
       }

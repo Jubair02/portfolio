@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { JWT } from "next-auth/jwt";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
@@ -100,8 +101,66 @@ export const { handlers, auth, signIn, signOut, unstable_update } = NextAuth({
           name: user.name,
           role: user.role,
           image: user.image ?? undefined,
+          passwordChangedAt: user.passwordChangedAt?.getTime() ?? 0,
         };
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    /**
+     * Session revocation.
+     *
+     * A JWT session is stateless, so nothing in the product could previously
+     * invalidate a leaked cookie: changing the password left every existing
+     * token valid for the rest of its 30 days, and deleting the user did not
+     * help either, because verifying a session only checked the signature.
+     *
+     * Auth.js runs this callback on *every* session read and treats a `null`
+     * return as "session over" — it clears the cookie. So this is the hook:
+     * compare the stamp frozen into the token at sign-in against the current
+     * database value, and reject on any disagreement.
+     *
+     * Equality, not `>`: clocks are not reliable here, and the token's own
+     * `iat` is rewritten on every read, so an ordering comparison would be
+     * meaningless. Any difference at all means the token predates the change.
+     *
+     * This runs in the Node runtime only. The edge middleware keeps the
+     * Prisma-free config, so a revoked token can still reach an admin URL —
+     * but the panel layout, every Server Action guard and both admin API
+     * routes call `auth()` from this instance, so it is rejected before any
+     * data is read or written.
+     */
+    async jwt(params) {
+      const token: JWT | null = authConfig.callbacks.jwt(params);
+      if (!token) return null;
+
+      // Initial sign-in: `authorize` just read this user, so the stamp is
+      // current by construction and a second query would be wasted.
+      if (params.user) return token;
+
+      const id = token.id;
+      if (!id) return null;
+
+      try {
+        const current = await prisma.user.findUnique({
+          where: { id },
+          select: { passwordChangedAt: true },
+        });
+        // The account was deleted while the token was still in its 30-day life.
+        if (!current) return null;
+        if ((current.passwordChangedAt?.getTime() ?? 0) !== (token.pwc ?? 0)) {
+          console.warn("[auth] Session revoked: password changed after this token was issued.");
+          return null;
+        }
+        return token;
+      } catch (err) {
+        // Fail closed. Every admin screen is force-dynamic and queries the
+        // database anyway, so a session we cannot verify is worth nothing —
+        // and letting it through would make an outage the way around this.
+        console.error("[auth] Could not verify session against the database:", err);
+        return null;
+      }
+    },
+  },
 });

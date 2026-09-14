@@ -27,6 +27,11 @@ export const authConfig = {
       if (user) {
         token.id = user.id as string;
         token.role = (user as { role?: string }).role ?? "ADMIN";
+        // Frozen at sign-in. auth.ts re-reads the current value on every
+        // session read and rejects the token when the two disagree, which is
+        // what lets a password change revoke sessions. The check itself can't
+        // live here — this config also runs on the edge, without Prisma.
+        token.pwc = user.passwordChangedAt ?? 0;
       }
       // Profile page calls unstable_update({ user: { name, email } }) after a save
       // so the topbar/sidebar reflect the change without a re-login.

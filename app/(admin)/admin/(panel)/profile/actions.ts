@@ -60,7 +60,15 @@ export async function changePassword(values: Record<string, unknown>): Promise<A
     const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
     if (!valid) return { ok: false, error: "Your current password is incorrect." };
     const passwordHash = await bcrypt.hash(parsed.data.newPassword, 12);
-    await prisma.user.update({ where: { id: admin.id }, data: { passwordHash } });
+    // Moving this forward invalidates every JWT stamped with the old value —
+    // including this browser's. That is the point: a password change is how
+    // you throw out a session you think someone else is holding. The caller
+    // signs out straight after so the logout is deliberate, not a surprise
+    // redirect on the next click.
+    await prisma.user.update({
+      where: { id: admin.id },
+      data: { passwordHash, passwordChangedAt: new Date() },
+    });
     return { ok: true };
   } catch {
     return { ok: false, error: "Could not change your password." };

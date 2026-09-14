@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Check, Loader2, AlertCircle } from "lucide-react";
 import { site } from "@/content/site";
 import { createRipple } from "@/lib/ripple";
-import { CONTACT_LIMITS, CONTACT_MESSAGE_MIN } from "@/lib/contact-limits";
+import { CONTACT_LIMITS, CONTACT_MESSAGE_MIN, emailError } from "@/lib/contact-limits";
 
 type Status = "idle" | "submitting" | "success" | "error";
 
@@ -20,6 +20,18 @@ export function ContactForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg] = useState("");
 
+  /** Re-check the address and add or clear its message. */
+  function checkEmail(value: string) {
+    setErrors((prev) => {
+      const problem = emailError(value);
+      if (problem === (prev.email ?? null)) return prev;
+      const next = { ...prev };
+      if (problem) next.email = problem;
+      else delete next.email;
+      return next;
+    });
+  }
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -33,18 +45,21 @@ export function ContactForm() {
     if (!name) next.name = "Please enter your name.";
     else if (name.length > CONTACT_LIMITS.name)
       next.name = `Please keep your name under ${CONTACT_LIMITS.name} characters.`;
-    if (!email) next.email = "Please enter your email.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-      next.email = "That email doesn't look right.";
-    else if (email.length > CONTACT_LIMITS.email)
-      next.email = "That email is too long.";
+    const emailProblem = emailError(email);
+    if (emailProblem) next.email = emailProblem;
     if (!message || message.length < CONTACT_MESSAGE_MIN)
       next.message = `Tell me a little more (${CONTACT_MESSAGE_MIN}+ characters).`;
     else if (message.length > CONTACT_LIMITS.message)
       next.message = `Please keep it under ${CONTACT_LIMITS.message} characters.`;
 
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    // The request is never made while a field is invalid. Move the cursor to
+    // the first problem so the reason is on screen and read out.
+    const firstInvalid = ["name", "email", "message"].find((field) => next[field]);
+    if (firstInvalid) {
+      (form.elements.namedItem(firstInvalid) as HTMLElement | null)?.focus();
+      return;
+    }
 
     setStatus("submitting");
     setErrorMsg("");
@@ -156,10 +171,12 @@ export function ContactForm() {
             placeholder="you@company.com"
             aria-invalid={!!errors.email}
             aria-describedby={errors.email ? "email-error" : undefined}
+            onBlur={(e) => e.target.value.trim() && checkEmail(e.target.value)}
+            onChange={(e) => errors.email && checkEmail(e.target.value)}
             className={inputBase}
           />
           {errors.email && (
-            <p id="email-error" className="mt-1.5 text-xs text-red-500">
+            <p id="email-error" role="alert" className="mt-1.5 text-xs text-red-500">
               {errors.email}
             </p>
           )}

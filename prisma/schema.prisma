@@ -27,6 +27,11 @@ model User {
   role         Role     @default(ADMIN)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  /// Stamped into every JWT at sign-in and re-checked on each session read.
+  /// Changing the password moves this forward, which invalidates every token
+  /// issued before it — the only way to revoke a stateless session.
+  passwordChangedAt DateTime?
 }
 
 // ---------------------------------------------------------------------------
