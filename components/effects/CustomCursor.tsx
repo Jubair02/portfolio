@@ -79,17 +79,19 @@ export function CustomCursor() {
       {/* Ring follower (theme-aware: contrasts in both light & dark) */}
       <motion.div
         className="absolute left-0 top-0 rounded-full border-[1.5px] border-[color:var(--foreground)]"
-        style={{ x: ringX, y: ringY, width: 34, height: 34, marginLeft: -17, marginTop: -17 }}
+        style={{ x: ringX, y: ringY, width: 24, height: 24, marginLeft: -12, marginTop: -12 }}
         animate={{
-          scale: down ? 0.8 : hovering ? 2.3 : 1,
-          opacity: hovering ? 0.8 : 0.6,
+          // 24px at rest, 36px over a link. The old 2.3x grew it to 78px, which
+          // read as a blob chasing the pointer rather than a cursor.
+          scale: down ? 0.85 : hovering ? 1.5 : 1,
+          opacity: hovering ? 0.75 : 0.55,
         }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
       />
       {/* Center dot */}
       <motion.div
         className="absolute left-0 top-0 rounded-full bg-[color:var(--foreground)]"
-        style={{ x, y, width: 7, height: 7, marginLeft: -3.5, marginTop: -3.5 }}
+        style={{ x, y, width: 6, height: 6, marginLeft: -3, marginTop: -3 }}
         animate={{ scale: hovering ? 0 : down ? 0.6 : 1 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       />
