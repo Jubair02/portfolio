@@ -17,7 +17,12 @@ export function Sidebar({
   return (
     <div className="flex h-full flex-col">
       {/* Brand */}
-      <div className="flex h-16 items-center gap-2.5 border-b border-border px-5">
+      <Link
+        href="/admin"
+        onClick={onNavigate}
+        aria-label="Portfolio CMS — dashboard"
+        className="flex h-16 items-center gap-2.5 border-b border-border px-5 transition-colors hover:bg-muted/50"
+      >
         <span className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent-2 text-sm font-bold text-primary-foreground">
           JH
         </span>
@@ -25,7 +30,7 @@ export function Sidebar({
           <p className="text-sm font-semibold">Portfolio CMS</p>
           <p className="text-xs text-muted-foreground">Admin panel</p>
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto p-3">

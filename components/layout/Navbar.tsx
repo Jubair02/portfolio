@@ -130,11 +130,15 @@ export function Navbar({
         )}
       >
         {/* Logo */}
-        <a
-          href="#top"
+        <Link
+          href="/"
           onClick={(e) => {
-            e.preventDefault();
-            smoothScrollTo(lenis, 0);
+            // Already home: scroll back to the top rather than re-navigating.
+            if (pathname === "/") {
+              e.preventDefault();
+              smoothScrollTo(lenis, 0);
+            }
+            setOpen(false);
           }}
           className="group flex items-center gap-2.5"
           aria-label={`${brand.name} — home`}
@@ -166,7 +170,7 @@ export function Navbar({
           <span className="hidden text-sm font-semibold tracking-tight sm:block">
             {brand.name}
           </span>
-        </a>
+        </Link>
 
         {/* Desktop links */}
         <ul className="hidden items-center gap-1 lg:flex">
