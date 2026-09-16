@@ -153,6 +153,9 @@ export async function restoreContentBackup(backup: ContentBackup): Promise<void>
           data: d.projects.map((p) => ({
             ...(stripMeta(p) as Prisma.ProjectCreateManyInput),
             metrics: json(p.metrics),
+            deck: json(p.deck),
+            attachments: json(p.attachments),
+            demoAccounts: json(p.demoAccounts),
           })),
         });
       }

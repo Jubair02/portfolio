@@ -33,6 +33,10 @@ command) live in `prisma.config.ts`, which loads `.env` via `dotenv`.
 > *raw* assets. New Cloudinary accounts block PDF delivery by default — if the
 > uploaded link returns 401, enable **Settings → Security → "Allow delivery of
 > PDF and ZIP files"** in your Cloudinary console.
+>
+> The same setting powers the per-project **slide deck**: a PDF uploaded there
+> is stored as a Cloudinary *image* resource, and each page is rendered on
+> demand, so the viewer needs no PDF library. Verified working on this account.
 
 > **Analytics:** the public layout renders Vercel Analytics (`@vercel/analytics`).
 > Turn on *Analytics* in the Vercel project settings to start collecting page

@@ -145,6 +145,31 @@ model Project {
   githubUrl   String?
   liveUrl     String?
   metrics     Json?
+  /// Slide deck: { url, publicId, pages } — uploaded as a Cloudinary image
+  /// resource so each page can be rendered on demand.
+  deck         Json?
+  /// Downloads: [{ label, url, publicId }]
+  attachments  Json?
+  /// Demo logins: [{ role, username, password, note }]
+  demoAccounts Json?
+  /// Scannable bullet list shown above the case study.
+  features     String[]
+  /// Free text: what was hard, and what came out of it.
+  challenges   String?
+  learnings    String?
+  /// YouTube or Vimeo walkthrough.
+  videoUrl     String?
+  /// Diagram plus a short explanation of how the pieces fit together.
+  architectureImage String?
+  architectureNote  String?
+  /// A quote from whoever the project was for.
+  feedbackQuote  String?
+  feedbackAuthor String?
+  feedbackRole   String?
+  /// Per-project overrides for search results and link previews.
+  metaTitle       String?
+  metaDescription String?
+  ogImage         String?
   order       Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

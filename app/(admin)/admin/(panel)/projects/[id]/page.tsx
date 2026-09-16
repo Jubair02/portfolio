@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { parseDeck, parseAttachments, parseDemoAccounts } from "@/lib/data";
 import { ProjectForm } from "@/components/admin/projects/ProjectForm";
 import type { ProjectFormValues } from "@/lib/schemas/project";
 import { isIconName } from "@/lib/icon-names";
@@ -35,6 +36,21 @@ export default async function EditProjectPage({
     icon: isIconName(p.icon) ? p.icon : "Sparkles",
     image: p.image ?? "",
     screenshots: p.screenshots,
+    features: p.features,
+    challenges: p.challenges ?? "",
+    learnings: p.learnings ?? "",
+    videoUrl: p.videoUrl ?? "",
+    architectureImage: p.architectureImage ?? "",
+    architectureNote: p.architectureNote ?? "",
+    feedbackQuote: p.feedbackQuote ?? "",
+    feedbackAuthor: p.feedbackAuthor ?? "",
+    feedbackRole: p.feedbackRole ?? "",
+    metaTitle: p.metaTitle ?? "",
+    metaDescription: p.metaDescription ?? "",
+    ogImage: p.ogImage ?? "",
+    deck: parseDeck(p.deck),
+    attachments: parseAttachments(p.attachments),
+    demoAccounts: parseDemoAccounts(p.demoAccounts),
     githubUrl: p.githubUrl ?? "",
     liveUrl: p.liveUrl ?? "",
     order: p.order,

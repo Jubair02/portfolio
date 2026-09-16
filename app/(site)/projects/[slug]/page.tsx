@@ -2,9 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, Star } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Star, Check, Network, Quote } from "lucide-react";
 import { getProject, getProjects } from "@/lib/data";
 import { Eyebrow } from "@/components/ui/Section";
+import { DemoAccess } from "@/components/sections/project/DemoAccess";
+import { SlideDeck } from "@/components/sections/project/SlideDeck";
+import { Attachments } from "@/components/sections/project/Attachments";
+import { VideoEmbed } from "@/components/sections/project/VideoEmbed";
+import { RelatedProjects } from "@/components/sections/project/RelatedProjects";
+import { ProjectNav } from "@/components/sections/project/ProjectNav";
 import { DataIcon, GithubIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 
@@ -19,22 +25,27 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const project = await getProject(slug);
   if (!project) return { title: "Project not found", robots: { index: false } };
 
+  // Per-project overrides win; otherwise the page's own copy is used.
+  const title = project.seo?.title || project.title;
+  const description = project.seo?.description || project.description;
+  const share = project.seo?.ogImage || project.image;
+
   return {
-    title: project.title,
-    description: project.description,
+    title,
+    description,
     alternates: { canonical: `/projects/${slug}` },
     openGraph: {
       type: "article",
-      title: project.title,
-      description: project.description,
+      title,
+      description,
       url: `/projects/${slug}`,
-      images: project.image ? [project.image] : undefined,
+      images: share ? [share] : undefined,
     },
     twitter: {
-      card: project.image ? "summary_large_image" : "summary",
-      title: project.title,
-      description: project.description,
-      images: project.image ? [project.image] : undefined,
+      card: share ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: share ? [share] : undefined,
     },
   };
 }
@@ -50,7 +61,14 @@ export default async function ProjectPage({ params }: Params) {
   const project = await getProject(slug);
   if (!project) notFound();
 
-  const { links, metrics, screenshots } = project;
+  const { links, metrics, screenshots, deck, attachments, demoAccounts } = project;
+
+  // The catalogue, for "related" and the previous/next pair. Cached, so this
+  // shares the query the list page already made during this render.
+  const all = await getProjects();
+  const index = all.findIndex((p) => p.slug === project.slug);
+  const previous = index > 0 ? all[index - 1] : undefined;
+  const next = index >= 0 && index < all.length - 1 ? all[index + 1] : undefined;
 
   return (
     <article className="container-page pb-24 pt-32 sm:pt-36">
@@ -111,6 +129,11 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </header>
 
+        {/* Credentials sit next to the demo button, where they are needed. */}
+        {demoAccounts && demoAccounts.length > 0 && (
+          <DemoAccess accounts={demoAccounts} demoUrl={links.demo} />
+        )}
+
         {/* Cover */}
         <div className="relative mt-12 aspect-[16/9] overflow-hidden rounded-3xl border border-[color:var(--border)]">
           {project.image ? (
@@ -134,6 +157,21 @@ export default async function ProjectPage({ params }: Params) {
           )}
         </div>
 
+        {/* Key features */}
+        {project.features && project.features.length > 0 && (
+          <section className="mt-14">
+            <h2 className="text-2xl font-semibold tracking-tight">What it does</h2>
+            <ul className="mt-5 grid gap-3 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+              {project.features.map((feature) => (
+                <li key={feature} className="flex gap-3 text-base leading-relaxed text-muted-foreground">
+                  <Check className="mt-1 size-4 shrink-0 text-primary" aria-hidden="true" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Case study */}
         {project.caseStudy && (
           <section className="mt-14">
@@ -147,6 +185,55 @@ export default async function ProjectPage({ params }: Params) {
                   <p key={i}>{paragraph}</p>
                 ))}
             </div>
+          </section>
+        )}
+
+        {/* Architecture */}
+        {(project.architectureImage || project.architectureNote) && (
+          <section className="mt-14">
+            <h2 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
+              <Network className="size-5 text-primary" aria-hidden="true" />
+              How it fits together
+            </h2>
+            {project.architectureNote && (
+              <p className="mt-5 text-base leading-relaxed text-muted-foreground">
+                {project.architectureNote}
+              </p>
+            )}
+            {project.architectureImage && (
+              <div className="relative mt-5 overflow-hidden rounded-3xl border border-[color:var(--border)] bg-[color:var(--muted)]/30">
+                <Image
+                  src={project.architectureImage}
+                  alt={`${project.title} architecture diagram`}
+                  width={1600}
+                  height={900}
+                  sizes="(max-width: 768px) 100vw, 56rem"
+                  className="h-auto w-full object-contain"
+                />
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Challenges and learnings */}
+        {(project.challenges || project.learnings) && (
+          <section className="mt-14 grid gap-6 sm:grid-cols-[repeat(2,minmax(0,1fr))]">
+            {project.challenges && (
+              <div className="surface rounded-3xl border border-[color:var(--border)] p-6">
+                <h2 className="text-lg font-semibold tracking-tight">The hard part</h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {project.challenges}
+                </p>
+              </div>
+            )}
+            {project.learnings && (
+              <div className="surface rounded-3xl border border-[color:var(--border)] p-6">
+                <h2 className="text-lg font-semibold tracking-tight">What I took from it</h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  {project.learnings}
+                </p>
+              </div>
+            )}
           </section>
         )}
 
@@ -169,6 +256,12 @@ export default async function ProjectPage({ params }: Params) {
             </dl>
           </section>
         )}
+
+        {/* Walkthrough */}
+        {project.videoUrl && <VideoEmbed url={project.videoUrl} title={project.title} />}
+
+        {/* Slide deck */}
+        {deck && <SlideDeck deck={deck} title={project.title} />}
 
         {/* Screenshots */}
         {screenshots && screenshots.length > 0 && (
@@ -197,6 +290,26 @@ export default async function ProjectPage({ params }: Params) {
           </section>
         )}
 
+        {/* Feedback */}
+        {project.feedback && (
+          <figure className="surface mt-14 rounded-3xl border border-[color:var(--border)] p-7">
+            <Quote className="size-7 text-primary/25" aria-hidden="true" />
+            <blockquote className="mt-3 text-lg font-medium leading-relaxed text-foreground/90">
+              “{project.feedback.quote}”
+            </blockquote>
+            {(project.feedback.author || project.feedback.role) && (
+              <figcaption className="mt-4 text-sm text-muted-foreground">
+                {project.feedback.author}
+                {project.feedback.author && project.feedback.role ? " · " : ""}
+                {project.feedback.role}
+              </figcaption>
+            )}
+          </figure>
+        )}
+
+        {/* Downloads */}
+        {attachments && <Attachments attachments={attachments} />}
+
         {/* Tech */}
         {project.tech.length > 0 && (
           <section className="mt-14 border-t border-[color:var(--border)] pt-8">
@@ -215,6 +328,10 @@ export default async function ProjectPage({ params }: Params) {
             </div>
           </section>
         )}
+
+        <RelatedProjects projects={all} current={project} />
+
+        <ProjectNav previous={previous} next={next} />
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-[color:var(--border)] pt-8">
           <Link

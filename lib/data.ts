@@ -10,6 +10,7 @@
  * Treating "empty" as "unavailable" made it impossible to clear a section from
  * the admin: deleting every row simply resurrected the static placeholders.
  */
+import { cache } from "react";
 import type { Project as ProjectRecord } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
@@ -22,6 +23,9 @@ import {
   testimonials as staticTestimonials,
   site,
   type Project,
+  type ProjectDeck,
+  type ProjectAttachment,
+  type DemoAccount,
 } from "@/content/site";
 import type { IconName } from "@/components/icons";
 import { siteCopySchema, type SiteCopyFormValues } from "@/lib/schemas/site-copy";
@@ -426,6 +430,72 @@ export async function getSocialLinks(): Promise<SocialLinkData[]> {
   }
 }
 
+/**
+ * Retry a query through a short backoff.
+ *
+ * Static generation renders many pages at once, each opening its own
+ * connection, and a pooled database will occasionally refuse one. Without this
+ * a single blip during a build is baked into the output permanently.
+ */
+async function withRetry<T>(run: () => Promise<T>, attempts = 3): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await run();
+    } catch (err) {
+      lastError = err;
+      if (attempt < attempts) {
+        await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
+      }
+    }
+  }
+  throw lastError;
+}
+
+/* The three Json columns below are validated on the way out as well as in:
+ * a hand-edited or restored row must never crash a public page. */
+
+/** A deck row, or null when absent or malformed. */
+export function parseDeck(value: unknown): ProjectDeck | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const d = value as Record<string, unknown>;
+  const pages = Number(d.pages);
+  if (typeof d.url !== "string" || !d.url) return null;
+  if (!Number.isFinite(pages) || pages < 1) return null;
+  return {
+    url: d.url,
+    publicId: typeof d.publicId === "string" ? d.publicId : undefined,
+    pages: Math.floor(pages),
+    label: typeof d.label === "string" && d.label ? d.label : undefined,
+  };
+}
+
+/** Attachment rows that have both a label and a URL. */
+export function parseAttachments(value: unknown): ProjectAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    const a = entry as Record<string, unknown> | null;
+    if (!a || typeof a.label !== "string" || !a.label) return [];
+    if (typeof a.url !== "string" || !a.url) return [];
+    return [{
+      label: a.label,
+      url: a.url,
+      publicId: typeof a.publicId === "string" ? a.publicId : undefined,
+    }];
+  });
+}
+
+/** Demo logins that at least name a role. */
+export function parseDemoAccounts(value: unknown): DemoAccount[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    const a = entry as Record<string, unknown> | null;
+    if (!a || typeof a.role !== "string" || !a.role) return [];
+    const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+    return [{ role: a.role, username: str(a.username), password: str(a.password), note: str(a.note) }];
+  });
+}
+
 /** Database row → the shape the public components render. */
 function toProject(p: ProjectRecord): Project {
   return {
@@ -449,26 +519,56 @@ function toProject(p: ProjectRecord): Project {
       Array.isArray(p.metrics) && p.metrics.length > 0
         ? (p.metrics as unknown as Metric[])
         : undefined,
+    features: p.features,
+    challenges: p.challenges ?? undefined,
+    learnings: p.learnings ?? undefined,
+    videoUrl: p.videoUrl ?? undefined,
+    architectureImage: p.architectureImage ?? undefined,
+    architectureNote: p.architectureNote ?? undefined,
+    feedback: p.feedbackQuote
+      ? {
+          quote: p.feedbackQuote,
+          author: p.feedbackAuthor ?? undefined,
+          role: p.feedbackRole ?? undefined,
+        }
+      : null,
+    seo: {
+      title: p.metaTitle ?? undefined,
+      description: p.metaDescription ?? undefined,
+      ogImage: p.ogImage ?? undefined,
+    },
+    deck: parseDeck(p.deck),
+    attachments: parseAttachments(p.attachments),
+    demoAccounts: parseDemoAccounts(p.demoAccounts),
   };
 }
 
-/** One published project by slug, or null. Drafts are invisible to the public. */
-export async function getProject(slug: string): Promise<Project | null> {
-  try {
-    const row = await prisma.project.findFirst({ where: { slug, status: "PUBLISHED" } });
-    return row ? toProject(row) : null;
-  } catch {
-    return null;
-  }
-}
+/**
+ * One published project by slug, or null when there genuinely isn't one.
+ *
+ * Deliberately does NOT swallow query errors: returning null for a failed
+ * lookup would render a 404 for a project that exists, and during a build that
+ * 404 is written to disk. A failure is raised instead, so it is visible.
+ *
+ * Wrapped in React's `cache` so the page and its `generateMetadata` share a
+ * single query per request instead of running two.
+ */
+export const getProject = cache(async (slug: string): Promise<Project | null> => {
+  const row = await withRetry(() =>
+    prisma.project.findFirst({ where: { slug, status: "PUBLISHED" } })
+  );
+  return row ? toProject(row) : null;
+});
 
 /** Published projects for the public site, DB-first with static fallback. */
-export async function getProjects(): Promise<Project[]> {
+export const getProjects = cache(async (): Promise<Project[]> => {
   try {
-    const rows = await prisma.project.findMany({
-      where: { status: "PUBLISHED" },
-      orderBy: [{ order: "asc" }, { createdAt: "desc" }],
-    });
+    const rows = await withRetry(() =>
+      prisma.project.findMany({
+        where: { status: "PUBLISHED" },
+        orderBy: [{ order: "asc" }, { createdAt: "desc" }],
+      })
+    );
 
     return rows.map(toProject);
   } catch (err) {
@@ -478,7 +578,7 @@ export async function getProjects(): Promise<Project[]> {
     );
     return staticProjects;
   }
-}
+});
 
 export type SiteCopyData = SiteCopyFormValues;
 

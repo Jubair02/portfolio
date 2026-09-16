@@ -14,6 +14,8 @@ export type UploadResult = {
   height?: number;
   format?: string;
   bytes?: number;
+  /** Page count, present when a PDF is uploaded as an image resource. */
+  pages?: number;
 };
 
 /** Upload an image buffer to Cloudinary under the given folder. */
@@ -60,6 +62,30 @@ export function uploadRawBuffer(
           publicId: result.public_id,
           format: filename.split(".").pop(),
           bytes: result.bytes,
+        });
+      }
+    );
+    stream.end(buffer);
+  });
+}
+
+/**
+ * Upload a PDF as an *image* resource. Cloudinary then reports the page count
+ * and can rasterise any single page, which is what the slide viewer renders.
+ * (Raw uploads, used for the résumé, support neither.)
+ */
+export function uploadPdfAsImage(buffer: Buffer, folder: string): Promise<UploadResult> {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, resource_type: "image" },
+      (error, result) => {
+        if (error || !result) return reject(error ?? new Error("Upload failed"));
+        resolve({
+          url: result.secure_url,
+          publicId: result.public_id,
+          format: result.format,
+          bytes: result.bytes,
+          pages: (result as { pages?: number }).pages,
         });
       }
     );

@@ -31,6 +31,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/admin/ui/
 import { ImageUpload } from "@/components/admin/ImageUpload";
 import { TagsInput } from "@/components/admin/TagsInput";
 import { IconPicker } from "@/components/admin/IconPicker";
+import { DeckUpload } from "@/components/admin/DeckUpload";
+import { FileUploadButton } from "@/components/admin/FileUploadButton";
 
 function Field({
   label,
@@ -81,6 +83,8 @@ export function ProjectForm({
   });
 
   const screenshots = watch("screenshots");
+  const attachments = watch("attachments");
+  const demoAccounts = watch("demoAccounts");
   const titleVal = watch("title");
   const slugVal = watch("slug");
   const metrics = watch("metrics");
@@ -227,6 +231,40 @@ export function ProjectForm({
 
           <Card>
             <CardHeader>
+              <CardTitle className="text-base">Story</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field
+                label="Key features"
+                hint="One per line. Shown as a ticked list above the case study."
+              >
+                <Controller
+                  control={control}
+                  name="features"
+                  render={({ field }) => (
+                    <TagsInput value={field.value} onChange={field.onChange} variant="line" />
+                  )}
+                />
+              </Field>
+              <Field
+                label="The hard part"
+                htmlFor="challenges"
+                hint="What was difficult, and how you got past it."
+              >
+                <Textarea id="challenges" rows={4} {...register("challenges")} />
+              </Field>
+              <Field
+                label="What I took from it"
+                htmlFor="learnings"
+                hint="What you learned, or would do differently next time."
+              >
+                <Textarea id="learnings" rows={4} {...register("learnings")} />
+              </Field>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
               <CardTitle className="text-base">Media</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -284,6 +322,207 @@ export function ProjectForm({
                   />
                 </div>
               </Field>
+
+              <Field
+                label="Architecture diagram"
+                hint="Optional. Shown full width under “How it fits together”."
+              >
+                <Controller
+                  control={control}
+                  name="architectureImage"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      folder="portfolio/architecture"
+                    />
+                  )}
+                />
+              </Field>
+              <Field
+                label="Architecture notes"
+                htmlFor="architectureNote"
+                hint="A short paragraph explaining how the pieces connect."
+              >
+                <Textarea id="architectureNote" rows={3} {...register("architectureNote")} />
+              </Field>
+
+              <Field
+                label="Walkthrough video"
+                htmlFor="videoUrl"
+                hint="A YouTube or Vimeo link. Embedded above the slides."
+                error={errors.videoUrl?.message}
+              >
+                <Input id="videoUrl" placeholder="https://youtu.be/…" {...register("videoUrl")} />
+              </Field>
+            </CardContent>
+          </Card>
+
+          {/* ---------------------------------------------------- Slides & files */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Slides &amp; documents</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Field
+                label="Slide deck"
+                hint="A PDF is shown slide by slide on the project page. Export from PowerPoint or Google Slides as PDF."
+              >
+                <Controller
+                  control={control}
+                  name="deck"
+                  render={({ field }) => (
+                    <DeckUpload value={field.value} onChange={field.onChange} />
+                  )}
+                />
+              </Field>
+
+              <Field
+                label="Downloads"
+                hint="Reports, specs or anything else a visitor can download."
+              >
+                <div className="space-y-2">
+                  {attachments.map((file, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <Input placeholder="Label, e.g. Project report" {...register(`attachments.${i}.label`)} />
+                        {errors.attachments?.[i]?.label && (
+                          <p className="mt-1 text-xs text-destructive">
+                            {errors.attachments[i]?.label?.message}
+                          </p>
+                        )}
+                        <p className="mt-1 truncate text-xs text-muted-foreground">
+                          {file.url ? file.url.split("/").pop() : "No file uploaded yet"}
+                        </p>
+                      </div>
+                      <FileUploadButton
+                        label={file.url ? "Replace" : "Upload"}
+                        onUploaded={({ url, publicId, name }) =>
+                          setValue(
+                            "attachments",
+                            attachments.map((a, idx) =>
+                              idx === i ? { ...a, url, publicId, label: a.label || name } : a
+                            ),
+                            { shouldValidate: true }
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 text-destructive"
+                        aria-label="Remove download"
+                        onClick={() =>
+                          setValue("attachments", attachments.filter((_, idx) => idx !== i))
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setValue("attachments", [...attachments, { label: "", url: "" }])
+                    }
+                  >
+                    <Plus className="size-4" /> Add a download
+                  </Button>
+                </div>
+              </Field>
+            </CardContent>
+          </Card>
+
+          {/* ---------------------------------------------------- Demo access */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Demo access</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Field
+                label="Demo logins"
+                hint="Shown as a “Try the demo” box with copy buttons. Only use throwaway accounts on seeded data."
+              >
+                <div className="space-y-3">
+                  {demoAccounts.map((_, i) => (
+                    <div key={i} className="rounded-xl border border-border p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="grid flex-1 gap-2 sm:grid-cols-3">
+                          <div>
+                            <Input placeholder="Role, e.g. Admin" {...register(`demoAccounts.${i}.role`)} />
+                            {errors.demoAccounts?.[i]?.role && (
+                              <p className="mt-1 text-xs text-destructive">
+                                {errors.demoAccounts[i]?.role?.message}
+                              </p>
+                            )}
+                          </div>
+                          <Input placeholder="Username or email" {...register(`demoAccounts.${i}.username`)} />
+                          <Input placeholder="Password" {...register(`demoAccounts.${i}.password`)} />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 text-destructive"
+                          aria-label="Remove login"
+                          onClick={() =>
+                            setValue("demoAccounts", demoAccounts.filter((_, idx) => idx !== i))
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                      <Input
+                        className="mt-2"
+                        placeholder="Note (optional), e.g. Can approve appointments"
+                        {...register(`demoAccounts.${i}.note`)}
+                      />
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setValue("demoAccounts", [
+                        ...demoAccounts,
+                        { role: "", username: "", password: "", note: "" },
+                      ])
+                    }
+                  >
+                    <Plus className="size-4" /> Add a login
+                  </Button>
+                </div>
+              </Field>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Feedback</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field
+                label="Quote"
+                htmlFor="feedbackQuote"
+                hint="Something the client, team or supervisor said about this project."
+              >
+                <Textarea id="feedbackQuote" rows={3} {...register("feedbackQuote")} />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Who said it" htmlFor="feedbackAuthor">
+                  <Input id="feedbackAuthor" placeholder="Name" {...register("feedbackAuthor")} />
+                </Field>
+                <Field label="Their role" htmlFor="feedbackRole">
+                  <Input
+                    id="feedbackRole"
+                    placeholder="Product Owner, Acme"
+                    {...register("feedbackRole")}
+                  />
+                </Field>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -363,6 +602,43 @@ export function ProjectForm({
                 hint="Tailwind gradient stops for the fallback cover."
               >
                 <Input id="gradient" {...register("gradient")} />
+              </Field>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Search &amp; sharing</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Field
+                label="Page title"
+                htmlFor="metaTitle"
+                hint="Falls back to the project title."
+                error={errors.metaTitle?.message}
+              >
+                <Input id="metaTitle" {...register("metaTitle")} />
+              </Field>
+              <Field
+                label="Meta description"
+                htmlFor="metaDescription"
+                hint="Falls back to the full description. Around 155 characters reads best."
+                error={errors.metaDescription?.message}
+              >
+                <Textarea id="metaDescription" rows={3} {...register("metaDescription")} />
+              </Field>
+              <Field label="Share image" hint="Falls back to the cover image.">
+                <Controller
+                  control={control}
+                  name="ogImage"
+                  render={({ field }) => (
+                    <ImageUpload
+                      value={field.value}
+                      onChange={field.onChange}
+                      folder="portfolio/og"
+                    />
+                  )}
+                />
               </Field>
             </CardContent>
           </Card>

@@ -2,13 +2,41 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { uploadBuffer, uploadRawBuffer, deleteAsset } from "@/lib/cloudinary";
+import { uploadBuffer, uploadRawBuffer, uploadPdfAsImage, deleteAsset } from "@/lib/cloudinary";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { collectImageUsages, findImageUsages } from "@/lib/media-usage";
 
 const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/avif", "image/gif", "image/svg+xml"];
 
 export type UploadState = { url?: string; publicId?: string; error?: string };
+
+/** A deck upload also reports how many slides it has. */
+export type DeckUploadState = UploadState & { pages?: number };
+
+/** Documents an attachment may be, beyond a PDF. */
+const ATTACHMENT_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  ppt: "application/vnd.ms-powerpoint",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  doc: "application/msword",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  csv: "text/csv",
+  txt: "text/plain",
+  zip: "application/zip",
+};
+
+/** "My Deck (final).pdf" → "my-deck-final-1737040000.pdf", unique per upload. */
+function safeFileName(original: string): string {
+  const dot = original.lastIndexOf(".");
+  const ext = (dot > -1 ? original.slice(dot + 1) : "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const base = (dot > -1 ? original.slice(0, dot) : original)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "file";
+  return `${base}-${Date.now().toString(36)}${ext ? "." + ext : ""}`;
+}
 
 /** Auth-guarded image upload used by every admin image field. */
 export async function uploadImageAction(formData: FormData): Promise<UploadState> {
@@ -143,5 +171,86 @@ export async function deleteUnusedAssetsAction(): Promise<{ ok: boolean; error?:
   } catch (err) {
     console.error("[media] delete unused failed:", err);
     return { ok: false, error: "Could not clean up unused files." };
+  }
+}
+
+/**
+ * Slide deck upload. Stored as an image resource so Cloudinary reports the
+ * page count and can render each page — see lib/pdf-slides.ts.
+ */
+export async function uploadDeckAction(formData: FormData): Promise<DeckUploadState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Not authorized." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No file provided." };
+  const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  if (!isPdf) {
+    return { error: "Please upload a PDF. Export your slides to PDF first — PowerPoint files can't be shown in a browser." };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) return { error: `File is larger than ${MAX_UPLOAD_LABEL}.` };
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.subarray(0, 5).toString("latin1") !== "%PDF-") {
+    return { error: "That file does not look like a PDF." };
+  }
+
+  try {
+    const folder = "portfolio/decks";
+    const result = await uploadPdfAsImage(buffer, folder);
+    if (!result.pages || result.pages < 1) {
+      return {
+        error:
+          "Cloudinary could not read the pages of that PDF. Check that PDF delivery is enabled under Settings → Security.",
+      };
+    }
+    await prisma.mediaAsset.create({
+      data: {
+        publicId: result.publicId,
+        url: result.url,
+        format: "pdf",
+        bytes: result.bytes,
+        folder,
+        resourceType: "image",
+      },
+    });
+    return { url: result.url, publicId: result.publicId, pages: result.pages };
+  } catch (err) {
+    console.error("[deck] upload failed:", err);
+    return { error: "Upload failed. Check your Cloudinary credentials." };
+  }
+}
+
+/** Any downloadable document attached to a project. */
+export async function uploadAttachmentAction(formData: FormData): Promise<UploadState> {
+  const session = await auth();
+  if (!session?.user) return { error: "Not authorized." };
+
+  const file = formData.get("file");
+  if (!(file instanceof File)) return { error: "No file provided." };
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  if (!(ext in ATTACHMENT_TYPES)) {
+    return { error: `Unsupported file type. Allowed: ${Object.keys(ATTACHMENT_TYPES).join(", ")}.` };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) return { error: `File is larger than ${MAX_UPLOAD_LABEL}.` };
+
+  try {
+    const folder = "portfolio/attachments";
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const result = await uploadRawBuffer(buffer, folder, safeFileName(file.name));
+    await prisma.mediaAsset.create({
+      data: {
+        publicId: result.publicId,
+        url: result.url,
+        format: ext,
+        bytes: result.bytes,
+        folder,
+        resourceType: "raw",
+      },
+    });
+    return { url: result.url, publicId: result.publicId };
+  } catch (err) {
+    console.error("[attachment] upload failed:", err);
+    return { error: "Upload failed. Check your Cloudinary credentials." };
   }
 }

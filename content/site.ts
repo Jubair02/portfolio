@@ -160,6 +160,29 @@ export const techMarquee = [
 /* -------------------------------------------------------------------------- */
 /* Featured projects — grounded in real GitHub repositories                   */
 /* -------------------------------------------------------------------------- */
+/** A slide deck, rendered page by page from Cloudinary. */
+export type ProjectDeck = {
+  url: string;
+  publicId?: string;
+  pages: number;
+  label?: string;
+};
+
+/** A downloadable document attached to a project. */
+export type ProjectAttachment = {
+  label: string;
+  url: string;
+  publicId?: string;
+};
+
+/** A login a visitor can use to explore the live demo. */
+export type DemoAccount = {
+  role: string;
+  username?: string;
+  password?: string;
+  note?: string;
+};
+
 export type Project = {
   /** URL segment for /projects/<slug>. Absent in the static fallback. */
   slug?: string;
@@ -177,6 +200,26 @@ export type Project = {
   icon: IconName;
   links: { demo?: string; github?: string };
   metrics?: { label: string; value: string }[];
+  /** Slide deck shown in the viewer on the project page. */
+  deck?: ProjectDeck | null;
+  /** Files a visitor can download. */
+  attachments?: ProjectAttachment[];
+  /** Credentials for trying the live demo. */
+  demoAccounts?: DemoAccount[];
+  /** Scannable highlights shown above the case study. */
+  features?: string[];
+  /** What was hard, and what came of it. */
+  challenges?: string;
+  learnings?: string;
+  /** A YouTube or Vimeo walkthrough. */
+  videoUrl?: string;
+  /** Architecture diagram and its explanation. */
+  architectureImage?: string;
+  architectureNote?: string;
+  /** A quote from whoever the project was for. */
+  feedback?: { quote: string; author?: string; role?: string } | null;
+  /** Overrides for search results and link previews. */
+  seo?: { title?: string; description?: string; ogImage?: string };
 };
 
 export const projects: Project[] = [
