@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
@@ -16,11 +16,8 @@ import {
   Link2,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  uploadImageAction,
-  deleteImageAction,
-  deleteUnusedAssetsAction,
-} from "@/lib/actions/upload";
+import { deleteImageAction, deleteUnusedAssetsAction } from "@/lib/actions/upload";
+import { uploadFile } from "@/lib/cloudinary-upload";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Input } from "@/components/admin/ui/input";
 import { Button } from "@/components/admin/ui/button";
@@ -71,7 +68,8 @@ export function MediaLibrary({
   const inputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState(q);
   const [copied, setCopied] = useState<string | null>(null);
-  const [pending, start] = useTransition();
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
@@ -85,27 +83,29 @@ export function MediaLibrary({
     router.push(qs ? `${pathname}?${qs}` : pathname);
   }
 
-  function upload(file: File) {
+  async function upload(file: File) {
     if (file.size > MAX_UPLOAD_BYTES) {
       toast.error(`Image is larger than ${MAX_UPLOAD_LABEL}. Please choose a smaller file.`);
       return;
     }
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("folder", "portfolio/library");
-    start(async () => {
-      try {
-        const res = await uploadImageAction(fd);
-        if (res.error) toast.error(res.error);
-        else {
-          toast.success("Uploaded.");
-          router.refresh();
-        }
-      } catch (err) {
-        console.error("[upload] client error:", err);
-        toast.error("Upload failed. The image may be too large or the connection dropped.");
+    setUploading(true);
+    setProgress(0);
+    try {
+      const res = await uploadFile(file, "image", {
+        folder: "portfolio/library",
+        onProgress: setProgress,
+      });
+      if (res.error) toast.error(res.error);
+      else {
+        toast.success("Uploaded.");
+        router.refresh();
       }
-    });
+    } catch (err) {
+      console.error("[upload] client error:", err);
+      toast.error("Upload failed. The connection may have dropped.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function copy(url: string) {
@@ -171,9 +171,13 @@ export function MediaLibrary({
               }
             />
           )}
-          <Button disabled={pending} onClick={() => inputRef.current?.click()}>
-            {pending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-            Upload
+          <Button disabled={uploading} onClick={() => inputRef.current?.click()}>
+            {uploading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <UploadCloud className="size-4" />
+            )}
+            {uploading ? `${progress}%` : "Upload"}
           </Button>
         </div>
         <input

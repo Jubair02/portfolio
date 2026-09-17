@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { UploadCloud, Loader2, Trash2, Presentation, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { uploadDeckAction } from "@/lib/actions/upload";
+import { uploadFile } from "@/lib/cloudinary-upload";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { pdfThumbUrl } from "@/lib/pdf-slides";
 import type { ProjectDeck } from "@/content/site";
@@ -24,34 +24,35 @@ export function DeckUpload({
   onChange: (deck: ProjectDeck | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     if (file.size > MAX_UPLOAD_BYTES) {
       toast.error(`That deck is larger than ${MAX_UPLOAD_LABEL}. Try exporting at a lower quality.`);
       return;
     }
-    const fd = new FormData();
-    fd.append("file", file);
-    start(async () => {
-      try {
-        const res = await uploadDeckAction(fd);
-        if (res.error || !res.url || !res.pages) {
-          toast.error(res.error ?? "Upload failed.");
-          return;
-        }
-        onChange({
-          url: res.url,
-          publicId: res.publicId,
-          pages: res.pages,
-          label: value?.label,
-        });
-        toast.success(`Deck uploaded — ${res.pages} slides. Save the form to publish it.`);
-      } catch (err) {
-        console.error("[deck] client error:", err);
-        toast.error("Upload failed. The file may be too large or the connection dropped.");
+    setPending(true);
+    setProgress(0);
+    try {
+      const res = await uploadFile(file, "deck", { onProgress: setProgress });
+      if (res.error || !res.url || !res.pages) {
+        toast.error(res.error ?? "Upload failed.");
+        return;
       }
-    });
+      onChange({
+        url: res.url,
+        publicId: res.publicId,
+        pages: res.pages,
+        label: value?.label,
+      });
+      toast.success(`Deck uploaded — ${res.pages} slides. Save the form to publish it.`);
+    } catch (err) {
+      console.error("[deck] client error:", err);
+      toast.error("Upload failed. The connection may have dropped.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -80,7 +81,7 @@ export function DeckUpload({
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => inputRef.current?.click()}>
                 {pending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-                Replace
+                {pending ? `${progress}%` : "Replace"}
               </Button>
               <Button type="button" variant="outline" size="sm" asChild>
                 <a href={value.url} target="_blank" rel="noreferrer noopener">
@@ -106,8 +107,10 @@ export function DeckUpload({
           className="flex h-28 w-full flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-border text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground"
         >
           {pending ? <Loader2 className="size-5 animate-spin" /> : <UploadCloud className="size-5" />}
-          <span>{pending ? "Uploading…" : "Upload a PDF deck"}</span>
-          <span className="text-xs">Export your slides to PDF first</span>
+          <span>{pending ? `Uploading… ${progress}%` : "Upload a PDF deck"}</span>
+          <span className="text-xs">
+            {pending ? "Keep this tab open" : "Export your slides to PDF first"}
+          </span>
         </button>
       )}
 

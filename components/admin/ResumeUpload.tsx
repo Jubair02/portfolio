@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useState } from "react";
 import { FileText, UploadCloud, Loader2, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { uploadResumeAction } from "@/lib/actions/upload";
+import { uploadFile } from "@/lib/cloudinary-upload";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Button } from "@/components/admin/ui/button";
 import { Input } from "@/components/admin/ui/input";
@@ -25,9 +25,10 @@ export function ResumeUpload({
   invalid?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
       toast.error("Please choose a PDF file.");
       return;
@@ -36,22 +37,22 @@ export function ResumeUpload({
       toast.error(`The PDF is larger than ${MAX_UPLOAD_LABEL}. Please choose a smaller file.`);
       return;
     }
-    const fd = new FormData();
-    fd.append("file", file);
-    start(async () => {
-      try {
-        const res = await uploadResumeAction(fd);
-        if (res.error || !res.url) {
-          toast.error(res.error ?? "Upload failed.");
-          return;
-        }
-        onChange(res.url);
-        toast.success("Résumé uploaded. Save the form to publish it.");
-      } catch (err) {
-        console.error("[resume] upload error:", err);
-        toast.error("Upload failed. The file may be too large or the connection dropped.");
+    setPending(true);
+    setProgress(0);
+    try {
+      const res = await uploadFile(file, "resume", { onProgress: setProgress });
+      if (res.error || !res.url) {
+        toast.error(res.error ?? "Upload failed.");
+        return;
       }
-    });
+      onChange(res.url);
+      toast.success("Résumé uploaded. Save the form to publish it.");
+    } catch (err) {
+      console.error("[resume] upload error:", err);
+      toast.error("Upload failed. The connection may have dropped.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -72,7 +73,7 @@ export function ResumeUpload({
           className="shrink-0"
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-          Upload PDF
+          {pending ? `${progress}%` : "Upload PDF"}
         </Button>
       </div>
       <input

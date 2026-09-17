@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useRef, useState } from "react";
 import { UploadCloud, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadAttachmentAction } from "@/lib/actions/upload";
+import { uploadFile } from "@/lib/cloudinary-upload";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Button } from "@/components/admin/ui/button";
 
@@ -16,7 +16,8 @@ export function FileUploadButton({
   label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   return (
     <>
@@ -29,14 +30,14 @@ export function FileUploadButton({
         className="shrink-0"
       >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-        {label}
+        {pending ? `${progress}%` : label}
       </Button>
       <input
         ref={inputRef}
         type="file"
         accept=".pdf,.ppt,.pptx,.doc,.docx,.xlsx,.csv,.txt,.zip"
         className="hidden"
-        onChange={(e) => {
+        onChange={async (e) => {
           const file = e.target.files?.[0];
           e.target.value = "";
           if (!file) return;
@@ -44,22 +45,22 @@ export function FileUploadButton({
             toast.error(`That file is larger than ${MAX_UPLOAD_LABEL}.`);
             return;
           }
-          const fd = new FormData();
-          fd.append("file", file);
-          start(async () => {
-            try {
-              const res = await uploadAttachmentAction(fd);
-              if (res.error || !res.url) {
-                toast.error(res.error ?? "Upload failed.");
-                return;
-              }
-              onUploaded({ url: res.url, publicId: res.publicId, name: file.name });
-              toast.success("File uploaded.");
-            } catch (err) {
-              console.error("[attachment] client error:", err);
-              toast.error("Upload failed. The file may be too large or the connection dropped.");
+          setPending(true);
+          setProgress(0);
+          try {
+            const res = await uploadFile(file, "attachment", { onProgress: setProgress });
+            if (res.error || !res.url) {
+              toast.error(res.error ?? "Upload failed.");
+              return;
             }
-          });
+            onUploaded({ url: res.url, publicId: res.publicId, name: file.name });
+            toast.success("File uploaded.");
+          } catch (err) {
+            console.error("[attachment] client error:", err);
+            toast.error("Upload failed. The connection may have dropped.");
+          } finally {
+            setPending(false);
+          }
         }}
       />
     </>

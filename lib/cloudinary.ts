@@ -18,79 +18,72 @@ export type UploadResult = {
   pages?: number;
 };
 
-/** Upload an image buffer to Cloudinary under the given folder. */
-export function uploadBuffer(
-  buffer: Buffer,
-  folder = "portfolio"
-): Promise<UploadResult> {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
-      (error, result) => {
-        if (error || !result) return reject(error ?? new Error("Upload failed"));
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-          width: result.width,
-          height: result.height,
-          format: result.format,
-          bytes: result.bytes,
-        });
-      }
-    );
-    stream.end(buffer);
-  });
+/** Everything the browser needs to POST one file straight to Cloudinary. */
+export type SignedUpload = {
+  endpoint: string;
+  apiKey: string;
+  signature: string;
+  /** Signed params. Every one must be sent back verbatim or the signature breaks. */
+  params: Record<string, string>;
+};
+
+/**
+ * Sign one direct-to-Cloudinary upload.
+ *
+ * The browser must never see the API secret, so the server signs a fixed set
+ * of params — folder, public id, allowed formats — and the browser can only
+ * send exactly those back. Altering any of them invalidates the signature, so
+ * an editor cannot redirect an upload into another folder or smuggle in a
+ * format the field does not accept.
+ *
+ * Signatures are timestamped and Cloudinary rejects stale ones (one hour), so
+ * a leaked signature is not a standing upload grant.
+ */
+export function signUpload(
+  resourceType: "image" | "raw",
+  params: Record<string, string | number | boolean>
+): SignedUpload {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error("Cloudinary credentials are not configured.");
+  }
+
+  // Cloudinary signs the string form of every value, so build the exact map
+  // the browser will send rather than signing one shape and posting another.
+  const signed: Record<string, string> = { timestamp: String(Math.round(Date.now() / 1000)) };
+  for (const [key, value] of Object.entries(params)) signed[key] = String(value);
+
+  return {
+    endpoint: `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+    apiKey,
+    signature: cloudinary.utils.api_sign_request(signed, apiSecret),
+    params: signed,
+  };
 }
 
 /**
- * Upload a non-image file (PDF résumé) as a Cloudinary "raw" asset. Raw public
- * ids carry their extension, so the delivered URL ends in .pdf and browsers
- * open it as a document.
+ * Read an uploaded asset's real metadata back from Cloudinary.
+ *
+ * After a direct upload this is the server's only trustworthy account of what
+ * was actually stored — size, format and page count all come from here rather
+ * than from whatever the browser claims.
  */
-export function uploadRawBuffer(
-  buffer: Buffer,
-  folder: string,
-  filename: string
+export async function getResource(
+  publicId: string,
+  resourceType: "image" | "raw" = "image"
 ): Promise<UploadResult> {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "raw", public_id: filename, overwrite: true, invalidate: true },
-      (error, result) => {
-        if (error || !result) return reject(error ?? new Error("Upload failed"));
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-          format: filename.split(".").pop(),
-          bytes: result.bytes,
-        });
-      }
-    );
-    stream.end(buffer);
-  });
-}
-
-/**
- * Upload a PDF as an *image* resource. Cloudinary then reports the page count
- * and can rasterise any single page, which is what the slide viewer renders.
- * (Raw uploads, used for the résumé, support neither.)
- */
-export function uploadPdfAsImage(buffer: Buffer, folder: string): Promise<UploadResult> {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: "image" },
-      (error, result) => {
-        if (error || !result) return reject(error ?? new Error("Upload failed"));
-        resolve({
-          url: result.secure_url,
-          publicId: result.public_id,
-          format: result.format,
-          bytes: result.bytes,
-          pages: (result as { pages?: number }).pages,
-        });
-      }
-    );
-    stream.end(buffer);
-  });
+  const resource = await cloudinary.api.resource(publicId, { resource_type: resourceType });
+  return {
+    url: resource.secure_url,
+    publicId: resource.public_id,
+    width: resource.width,
+    height: resource.height,
+    format: resource.format,
+    bytes: resource.bytes,
+    pages: (resource as { pages?: number }).pages,
+  };
 }
 
 /** Delete an asset from Cloudinary by public id. */

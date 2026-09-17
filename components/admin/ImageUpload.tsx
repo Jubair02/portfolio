@@ -1,10 +1,10 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import { UploadCloud, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { uploadImageAction } from "@/lib/actions/upload";
+import { uploadFile } from "@/lib/cloudinary-upload";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from "@/lib/upload-limits";
 import { Button } from "@/components/admin/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,33 +21,33 @@ export function ImageUpload({
   className?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [pending, start] = useTransition();
+  const [pending, setPending] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
 
-  function handleFile(file: File) {
+  async function handleFile(file: File) {
     if (file.size > MAX_UPLOAD_BYTES) {
       toast.error(`Image is larger than ${MAX_UPLOAD_LABEL}. Please choose a smaller file.`);
       return;
     }
-    const fd = new FormData();
-    fd.append("file", file);
-    fd.append("folder", folder);
-    start(async () => {
-      try {
-        const res = await uploadImageAction(fd);
-        if (res.error) {
-          toast.error(res.error);
-          return;
-        }
-        if (res.url) {
-          onChange(res.url);
-          toast.success("Image uploaded.");
-        }
-      } catch (err) {
-        console.error("[upload] client error:", err);
-        toast.error("Upload failed. The image may be too large or the connection dropped.");
+    setPending(true);
+    setProgress(0);
+    try {
+      const res = await uploadFile(file, "image", { folder, onProgress: setProgress });
+      if (res.error) {
+        toast.error(res.error);
+        return;
       }
-    });
+      if (res.url) {
+        onChange(res.url);
+        toast.success("Image uploaded.");
+      }
+    } catch (err) {
+      console.error("[upload] client error:", err);
+      toast.error("Upload failed. The connection may have dropped.");
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -96,7 +96,7 @@ export function ImageUpload({
           ) : (
             <UploadCloud className="size-6" />
           )}
-          <span>{pending ? "Uploading…" : "Click or drag an image to upload"}</span>
+          <span>{pending ? `Uploading… ${progress}%` : "Click or drag an image to upload"}</span>
         </button>
       )}
 
@@ -121,7 +121,7 @@ export function ImageUpload({
           disabled={pending}
         >
           {pending ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-          Replace
+          {pending ? `${progress}%` : "Replace"}
         </Button>
       )}
     </div>

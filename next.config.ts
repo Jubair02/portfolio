@@ -27,8 +27,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Import only the icons/animations actually used, shrinking the bundle.
     optimizePackageImports: ["lucide-react", "framer-motion"],
-    // Allow image uploads through Server Actions (default cap is 1 MB).
-    // Kept in step with the upload limit the UI and the action enforce.
+    // Headroom over the 1 MB default for long-form project copy. Uploads do
+    // NOT ride on this: files go browser -> Cloudinary directly, because
+    // Vercel caps function request bodies at 4.5 MB no matter what is set
+    // here. See lib/upload-limits.ts.
     serverActions: {
       bodySizeLimit: SERVER_ACTION_BODY_LIMIT,
     },

@@ -38,6 +38,20 @@ command) live in `prisma.config.ts`, which loads `.env` via `dotenv`.
 > is stored as a Cloudinary *image* resource, and each page is rendered on
 > demand, so the viewer needs no PDF library. Verified working on this account.
 
+> **Upload size limit: 10 MB**, set by `MAX_UPLOAD_MB` in `lib/upload-limits.ts`
+> and enforced in three places (browser pre-check, Cloudinary's own signed
+> params, and a post-upload verification that reads the stored file's real size
+> back). 10 MB is Cloudinary's per-file ceiling on the free plan — raise the
+> constant after upgrading and every check and every bit of UI copy follows.
+>
+> Files do **not** pass through the server. The browser asks
+> `signUploadAction` for a short-lived signature and POSTs the bytes straight
+> to Cloudinary; only the resulting public id comes back, for
+> `registerUploadAction` to verify and record. This is not an optimisation:
+> Vercel caps a function's request body at 4.5 MB and no Next.js config can
+> lift it, so anything routed through a Server Action would fail in production
+> at sizes that work fine in `npm run dev`.
+
 > **Analytics:** the public layout renders Vercel Analytics (`@vercel/analytics`).
 > Turn on *Analytics* in the Vercel project settings to start collecting page
 > views and Web Vitals; it is a no-op everywhere else.
@@ -145,8 +159,9 @@ npm run db:migrate -- --name add_something
   row in a module empties that module and the matching public section hides
   itself. Mutations call `revalidatePath("/")` so the public site updates
   near-instantly.
-- **Images**: uploaded to Cloudinary via the `uploadImageAction` server action;
-  tracked in the `MediaAsset` table.
+- **Images**: uploaded from the browser straight to Cloudinary using a
+  signature from `signUploadAction`, then verified and recorded by
+  `registerUploadAction`; tracked in the `MediaAsset` table.
 
 ## Status — ✅ COMPLETE
 
@@ -183,8 +198,9 @@ section reads live from the DB (with static fallback if the DB is unreachable).
   `crud` helper (`lib/crud.ts`) → thin per-module `actions.ts`.
 - Singletons (Hero, About, SEO, Site Settings, Profile) use `SettingsForm`.
 - All mutations `revalidatePath("/")` so the public site updates immediately.
-- Every image field uploads to Cloudinary via the `uploadImageAction` server
-  action and is tracked in the `MediaAsset` table (visible in Media Library).
+- Every image field uploads directly to Cloudinary (signed by
+  `signUploadAction`, verified by `registerUploadAction`) and is tracked in the
+  `MediaAsset` table (visible in Media Library).
 
 ### Nice-to-have follow-ups (not blocking)
 
