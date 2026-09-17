@@ -191,7 +191,7 @@ export async function registerUploadAction(
       if (asset.format !== "pdf") return discard("That file is not a PDF.");
       if (!asset.pages || asset.pages < 1) {
         return discard(
-          "Cloudinary could not read the pages of that PDF. Check that PDF delivery is enabled under Settings → Security."
+          "Cloudinary could not read the pages of that PDF. It may be encrypted or damaged — try re-exporting it."
         );
       }
       await prisma.mediaAsset.create({

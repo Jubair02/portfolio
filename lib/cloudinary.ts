@@ -69,12 +69,20 @@ export function signUpload(
  * After a direct upload this is the server's only trustworthy account of what
  * was actually stored — size, format and page count all come from here rather
  * than from whatever the browser claims.
+ *
+ * `pages` is the one field the Admin API withholds by default: it counts the
+ * pages of a multi-page file only when asked with `pages: true`, so without it
+ * every PDF comes back looking like a zero-page document. The flag only
+ * applies to image resources — a raw asset is never parsed.
  */
 export async function getResource(
   publicId: string,
   resourceType: "image" | "raw" = "image"
 ): Promise<UploadResult> {
-  const resource = await cloudinary.api.resource(publicId, { resource_type: resourceType });
+  const resource = await cloudinary.api.resource(publicId, {
+    resource_type: resourceType,
+    ...(resourceType === "image" ? { pages: true } : {}),
+  });
   return {
     url: resource.secure_url,
     publicId: resource.public_id,
