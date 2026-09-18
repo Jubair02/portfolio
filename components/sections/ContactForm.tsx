@@ -15,10 +15,16 @@ const GENERIC_ERROR =
 const inputBase =
   "w-full rounded-2xl border border-[color:var(--border)] bg-[color:var(--muted)]/40 px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground outline-none transition-[color,background-color,border-color,box-shadow] duration-300 hover:border-[color:var(--primary)]/40 focus:border-[color:var(--primary)] focus:bg-[color:var(--muted)]/70 focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--ring)_16%,transparent)] aria-[invalid=true]:border-red-500/70";
 
-export function ContactForm() {
+/**
+ * The public contact form. Used bare in the home page's contact band; the
+ * /contact page also passes `topics`, which adds a row of chips whose pick is
+ * sent as the message's subject.
+ */
+export function ContactForm({ topics }: { topics?: readonly string[] }) {
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg] = useState("");
+  const [topic, setTopic] = useState("");
 
   /** Re-check the address and add or clear its message. */
   function checkEmail(value: string) {
@@ -67,7 +73,8 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, message, website }),
+        // The topic is optional; an unset chip sends nothing rather than "".
+        body: JSON.stringify({ name, email, message, website, subject: topic || undefined }),
       });
       if (!res.ok) {
         // The API returns a human-readable reason when it throttles a sender.
@@ -80,6 +87,7 @@ export function ContactForm() {
       }
       setStatus("success");
       form.reset();
+      setTopic("");
     } catch {
       setStatus("error");
       setErrorMsg(GENERIC_ERROR);
@@ -130,6 +138,37 @@ export function ContactForm() {
         />
       </div>
 
+      {topics && topics.length > 0 && (
+        <div role="group" aria-labelledby="contact-topic-label">
+          <p id="contact-topic-label" className="mb-2 text-sm font-medium text-foreground/85">
+            What&apos;s this about?{" "}
+            <span className="font-normal text-muted-foreground">(optional)</span>
+          </p>
+          {/* Toggle buttons rather than radios: tapping the chosen chip again
+              clears it, and there is no required answer. */}
+          <div className="flex flex-wrap gap-2">
+            {topics.map((option) => {
+              const selected = option === topic;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setTopic(selected ? "" : option)}
+                  className={`inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-medium transition-[color,background-color,border-color,transform] duration-300 active:scale-[0.97] ${
+                    selected
+                      ? "border-[color:var(--primary)] bg-primary/12 text-foreground"
+                      : "border-[color:var(--border)] bg-[color:var(--muted)]/40 text-muted-foreground hover:border-[color:var(--primary)]/40 hover:text-foreground"
+                  }`}
+                >
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label
@@ -150,7 +189,7 @@ export function ContactForm() {
             className={inputBase}
           />
           {errors.name && (
-            <p id="name-error" className="mt-1.5 text-xs text-red-500">
+            <p id="name-error" role="alert" className="mt-1.5 text-xs text-red-500">
               {errors.name}
             </p>
           )}
@@ -201,7 +240,7 @@ export function ContactForm() {
           className={`${inputBase} resize-none`}
         />
         {errors.message && (
-          <p id="message-error" className="mt-1.5 text-xs text-red-500">
+          <p id="message-error" role="alert" className="mt-1.5 text-xs text-red-500">
             {errors.message}
           </p>
         )}

@@ -10,7 +10,7 @@ import {
   siteCopySchema,
   SECTION_KEYS,
   SECTION_LABELS,
-  NAV_TARGETS,
+  NAV_PICKER_TARGETS,
   NAV_TARGET_LABELS,
   type SiteCopyFormValues,
 } from "@/lib/schemas/site-copy";
@@ -180,7 +180,7 @@ export function SiteCopyForm({ initial }: { initial: SiteCopyFormValues }) {
                           <SelectValue placeholder="Pick a section" />
                         </SelectTrigger>
                         <SelectContent>
-                          {NAV_TARGETS.map((a) => (
+                          {NAV_PICKER_TARGETS.map((a) => (
                             <SelectItem key={a} value={a}>
                               {NAV_TARGET_LABELS[a]}{" "}
                               <span className="text-muted-foreground">{a}</span>

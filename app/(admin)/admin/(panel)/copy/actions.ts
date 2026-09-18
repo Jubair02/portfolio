@@ -43,6 +43,7 @@ export async function updateSiteCopy(values: SiteCopyFormValues): Promise<Action
     });
     await logActivity("updated", "site copy");
     revalidatePath("/");
+    revalidatePath("/contact");
     revalidatePath("/admin/copy");
     return { ok: true };
   } catch (err) {

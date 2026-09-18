@@ -47,6 +47,7 @@ export async function updateHero(values: HeroFormValues): Promise<ActionResult> 
     });
     await logActivity("updated", "hero", "hero section");
     revalidatePath("/");
+    revalidatePath("/contact");
     revalidatePath("/admin/hero");
     return { ok: true };
   } catch (err) {

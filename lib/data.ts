@@ -13,6 +13,7 @@
 import { cache } from "react";
 import type { Project as ProjectRecord } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { resolveNavTarget } from "@/lib/nav";
 import {
   projects as staticProjects,
   about as staticAbout,
@@ -155,7 +156,7 @@ const heroFallback: HeroData = {
   primaryCtaLabel: "View my work",
   primaryCtaHref: "#work",
   secondaryCtaLabel: "Get in touch",
-  secondaryCtaHref: "#contact",
+  secondaryCtaHref: "/contact",
 };
 
 const aboutFallback: AboutData = {
@@ -188,9 +189,9 @@ export async function getHero(): Promise<HeroData> {
       resumeUrl: h.resumeUrl,
       heroImage: h.heroImage ?? "/jubair-portrait.jpg",
       primaryCtaLabel: h.primaryCtaLabel,
-      primaryCtaHref: h.primaryCtaHref,
+      primaryCtaHref: resolveNavTarget(h.primaryCtaHref),
       secondaryCtaLabel: h.secondaryCtaLabel,
-      secondaryCtaHref: h.secondaryCtaHref,
+      secondaryCtaHref: resolveNavTarget(h.secondaryCtaHref),
     };
   } catch {
     return heroFallback;
@@ -610,7 +611,15 @@ export async function getSiteCopy(): Promise<SiteCopyData> {
       console.warn("[data] getSiteCopy: stored copy failed validation, using defaults.");
       return staticSiteCopy();
     }
-    return parsed.data;
+    // Nav items saved before Contact became its own route still hold
+    // "#contact"; point them at the live page rather than a dead anchor.
+    return {
+      ...parsed.data,
+      navItems: parsed.data.navItems.map((item) => ({
+        ...item,
+        href: resolveNavTarget(item.href) as typeof item.href,
+      })),
+    };
   } catch {
     return staticSiteCopy();
   }

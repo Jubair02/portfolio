@@ -44,7 +44,6 @@ export const nav = [
   { label: "Work", href: "#work" },
   { label: "Experience", href: "#experience" },
   { label: "Services", href: "#services" },
-  { label: "Contact", href: "#contact" },
 ] as const;
 
 /* -------------------------------------------------------------------------- */

@@ -45,6 +45,8 @@ export type Message = {
   id: string;
   name: string;
   email: string;
+  /** Topic chosen on /contact ("New project", ...); null from the home form. */
+  subject: string | null;
   message: string;
   read: boolean;
   repliedAt: string | null;
@@ -106,7 +108,8 @@ export function MessagesInbox({
 
   function openReply(m: Message) {
     setReplyTo(m);
-    setSubject("Re: your message from my portfolio");
+    // Echo the topic they picked so the thread reads naturally in their inbox.
+    setSubject(m.subject ? `Re: ${m.subject}` : "Re: your message from my portfolio");
     setBody(`Hi ${m.name.trim().split(/\s+/)[0] || m.name},\n\n`);
   }
 
@@ -199,6 +202,11 @@ export function MessagesInbox({
                       {m.repliedAt && (
                         <Badge variant="success" className="ml-1 gap-1">
                           <Reply className="size-3" /> Replied
+                        </Badge>
+                      )}
+                      {m.subject && (
+                        <Badge variant="outline" className="ml-1">
+                          {m.subject}
                         </Badge>
                       )}
                     </div>

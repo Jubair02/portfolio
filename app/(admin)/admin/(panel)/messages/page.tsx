@@ -24,6 +24,7 @@ export default async function MessagesAdminPage({
           OR: [
             { name: { contains: q, mode: "insensitive" } },
             { email: { contains: q, mode: "insensitive" } },
+            { subject: { contains: q, mode: "insensitive" } },
             { message: { contains: q, mode: "insensitive" } },
           ],
         }
@@ -47,6 +48,7 @@ export default async function MessagesAdminPage({
       id: m.id,
       name: m.name,
       email: m.email,
+      subject: m.subject,
       message: m.message,
       read: m.read,
       repliedAt: m.repliedAt ? m.repliedAt.toISOString() : null,

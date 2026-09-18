@@ -91,6 +91,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: false, error: "Invalid input." }, { status: 400 });
     }
     const { name, email, message, website } = parsed.data;
+    // Empty string and undefined both mean "no topic chosen".
+    const subject = parsed.data.subject?.trim() || null;
 
     // Bots get a success response so they have no signal to adapt to; nothing
     // is stored or sent.
@@ -133,7 +135,7 @@ export async function POST(req: Request) {
     // relay, with no stored record of what went out. Fail loudly instead: the
     // form shows the error alongside a direct mailto link.
     try {
-      await prisma.contactMessage.create({ data: { name, email, message } });
+      await prisma.contactMessage.create({ data: { name, email, subject, message } });
       await logActivity("received", "message", `from ${name}`);
     } catch (dbErr) {
       console.error("[contact] could not persist message:", dbErr);
@@ -184,8 +186,12 @@ export async function POST(req: Request) {
           from: process.env.CONTACT_FROM_EMAIL || "Portfolio <onboarding@resend.dev>",
           to: [to],
           reply_to: email,
-          subject: `Portfolio contact — ${singleLine(name)}`,
-          text: `New message from your portfolio contact form:\n\nName: ${name}\nEmail: ${email}\n\n${message}`,
+          subject: `Portfolio contact — ${singleLine(name)}${
+            subject ? ` — ${singleLine(subject)}` : ""
+          }`,
+          text: `New message from your portfolio contact form:\n\nName: ${name}\nEmail: ${email}${
+            subject ? `\nAbout: ${subject}` : ""
+          }\n\n${message}`,
         }),
       });
       if (!res.ok) {

@@ -10,6 +10,8 @@
 export const CONTACT_LIMITS = {
   name: 100,
   email: 254,
+  /** Topic chip or free text; lands in ContactMessage.subject and the email subject line. */
+  subject: 120,
   message: 4000,
 } as const;
 

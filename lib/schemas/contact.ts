@@ -15,6 +15,8 @@ export const contactSchema = z.object({
   name: z.string().trim().min(1).max(CONTACT_LIMITS.name),
   email: z.string().trim().min(3).max(CONTACT_LIMITS.email).regex(EMAIL_PATTERN),
   message: z.string().trim().min(CONTACT_MESSAGE_MIN).max(CONTACT_LIMITS.message),
+  /** What the message is about — the topic chip on /contact. Optional, so the home form is unchanged. */
+  subject: z.string().trim().max(CONTACT_LIMITS.subject).optional(),
   /** Honeypot: hidden from humans, so anything here is a bot. */
   website: z.string().max(CONTACT_LIMITS.name).optional(),
 });

@@ -19,6 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.8,
     },
+    {
+      url: `${url}/contact`,
+      lastModified: new Date(),
+      changeFrequency: "yearly",
+      priority: 0.7,
+    },
     ...projects
       .filter((p) => p.slug)
       .map((p) => ({

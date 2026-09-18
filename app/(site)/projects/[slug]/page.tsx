@@ -341,7 +341,7 @@ export default async function ProjectPage({ params }: Params) {
             <ArrowLeft className="size-4" /> Browse all projects
           </Link>
           <Link
-            href="/#contact"
+            href="/contact"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             Work on something like this?

@@ -26,7 +26,6 @@ import { Certifications } from "@/components/sections/Certifications";
 import { Testimonials } from "@/components/sections/Testimonials";
 import { GitHubStats } from "@/components/sections/GitHubStats";
 import { Blog } from "@/components/sections/Blog";
-import { Contact } from "@/components/sections/Contact";
 import { SectionDivider } from "@/components/ui/SectionDivider";
 
 /**
@@ -128,7 +127,6 @@ export default async function Home() {
       <SectionDivider />
       <GitHubStats heading={sections.github} github={github} miniProjects={copy.miniProjects} />
       <Blog heading={sections.blog} posts={posts} />
-      <Contact hero={hero} socials={socials} copy={copy.contact} />
     </>
   );
 }

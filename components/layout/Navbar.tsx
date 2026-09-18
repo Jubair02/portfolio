@@ -235,7 +235,7 @@ export function Navbar({
           )}
           <ThemeToggle className="hidden sm:grid" />
           <div className="hidden lg:block">
-            <Button href="/#contact" size="sm" magnetic>
+            <Button href="/contact" size="sm" magnetic>
               Let&apos;s talk
             </Button>
           </div>
@@ -327,7 +327,7 @@ export function Navbar({
                   <SocialIcons links={socials} limit={3} iconClassName="size-5" />
                   <ThemeToggle />
                 </div>
-                <Button href="/#contact" size="sm" onClick={() => setOpen(false)}>
+                <Button href="/contact" size="sm" onClick={() => setOpen(false)}>
                   Let&apos;s talk
                 </Button>
               </div>

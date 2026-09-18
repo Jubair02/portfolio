@@ -76,9 +76,23 @@ export const SECTION_ANCHORS = [
   "#testimonials",
   "#github",
   "#blog",
-  "#contact",
 ] as const;
-export type SectionAnchor = (typeof SECTION_ANCHORS)[number];
+
+/**
+ * Anchors that no longer exist on the home page.
+ *
+ * Contact moved to its own route, so "#contact" scrolls nowhere. It stays a
+ * *valid* value because `getSiteCopy` falls back to the entire shipped copy
+ * when parsing fails — dropping it from the enum would make one stale nav row
+ * silently discard every other saved heading. Stored values are rewritten to
+ * the real route on read instead; see `resolveNavTarget` in lib/nav.ts.
+ */
+export const RETIRED_ANCHORS = ["#contact"] as const;
+
+export type SectionAnchor =
+  | (typeof SECTION_ANCHORS)[number]
+  | (typeof RETIRED_ANCHORS)[number];
+
 export const ANCHOR_LABELS: Record<SectionAnchor, string> = {
   "#about": "About",
   "#skills": "Skills",
@@ -93,17 +107,25 @@ export const ANCHOR_LABELS: Record<SectionAnchor, string> = {
 };
 
 /** Real routes a nav item may point at, alongside the on-page sections. */
-export const PAGE_ROUTES = ["/projects"] as const;
+export const PAGE_ROUTES = ["/projects", "/contact"] as const;
 export type PageRoute = (typeof PAGE_ROUTES)[number];
 
 export type NavTarget = SectionAnchor | PageRoute;
 
-/** Everything the nav picker offers, sections first. */
-export const NAV_TARGETS = [...SECTION_ANCHORS, ...PAGE_ROUTES] as [NavTarget, ...NavTarget[]];
+/** Everything that parses, including anchors kept only for stored rows. */
+export const NAV_TARGETS = [
+  ...SECTION_ANCHORS,
+  ...RETIRED_ANCHORS,
+  ...PAGE_ROUTES,
+] as [NavTarget, ...NavTarget[]];
+
+/** What the admin picker offers — live targets only, so no dead anchors. */
+export const NAV_PICKER_TARGETS = [...SECTION_ANCHORS, ...PAGE_ROUTES] as const;
 
 export const NAV_TARGET_LABELS: Record<NavTarget, string> = {
   ...ANCHOR_LABELS,
   "/projects": "All projects (page)",
+  "/contact": "Contact (page)",
 };
 
 export const navItemSchema = z.object({
